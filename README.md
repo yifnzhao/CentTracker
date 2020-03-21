@@ -66,7 +66,6 @@ df['Predicted_Label'] = y_pred
 df.to_csv ('predictions.csv', index = False, header=True)
 ```
 
-<<<<<<< HEAD
 ## How I built the model: a brief description of the classifier development pipeline
 ### 1 Data Preprocessing
 
@@ -86,7 +85,7 @@ The TrackMate output is parsed to generate the following information:
     - x, y, z, t
     - spot ID
 
-##### 2. Crude filtering and feature generation
+##### 2. Crude Filtering and Feature Generation
 - For each track:
   - if track duration < 10 frames (= 5 min), discard
 - For every potential track pair, the following filters are applied:
@@ -108,7 +107,7 @@ Additionally, the following statistics are calculated:
 *Note: **mean distance** is calculated by taking the average of the spindle length at each time point. It is not included as a classification feature.
 
 ##### 3. Building a classifier
-1. Model selection
+###### 1) Model selection
 The following classifiers are selected for testing:
   - [AdaBoost](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.AdaBoostClassifier.html)
   - [Random Forest](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html)
@@ -117,6 +116,29 @@ The following classifiers are selected for testing:
   - [SVM with Stochastic Gradient Descent](https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.SGDClassifier.html#sklearn.linear_model.SGDClassifier)
   - [Logistic Regression](https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LinearRegression.html)
 
-2. Hyperparameter tuning
-Results:
-\![Ada](./fig/ada_tuning.png)
+###### 2) Data Preprocessing
+  - Data: The current dataset consists of three 3D time-lapse microscopy movies of *C. elegans* taken under similar imaging conditions (courtesy of Réda Zellag) and corresponding trackmate output and manual labels. The trackmate output are first processed and features are generated as described in the sections above, Parsing, and Crude Filtering and Feature Generation.
+  - Normalization: Each feature is scaled and normalized individually so that it is in the range (0, 1) on the dataset.
+  - Train-Test Split: the dataset is shuffled and split into training set (67%) and testing set (33%)
+
+###### 3) Hyperparameter tuning
+1. Selecting hyperparameter range with stratified cross validation
+  Results: see [fig](https://github.com/yifnzhao/semi-automated-centrosome-pairing/blob/master/fig/)
+2. Random search to tune hyperparameter with bootstraping
+  Results: RandomForestClassifier with the following hyperparameters gives the best precision score (positive predictive value) during the validation phase.
+  ```
+  rf_clf = RandomForestClassifier(min_impurity_decrease=4.496833213815348e-07,criterion='gini',warm_start=True, n_estimators=10)
+  ```
+
+  ###### 4) Predict and Test
+  - precision score: 0.9631551440943706
+  - accuracy score: 0.9613259668508287
+  - classification report:
+
+|| precision    | recall    |f1-score|support|
+  | :------------- | :------------- | :------------- | :------------- |
+  | 0      | 0.95        | 1.00       | 0.98   | 141|
+  | 1      | 1.00     | 0.82      | 0.90   | 40|
+  |accuracy|||0.96|181|
+  |macro avg   | 0.98 |     0.91  |    0.94   |    181|
+  |  weighted avg |0.96  |    0.96|      0.96 |      181|
