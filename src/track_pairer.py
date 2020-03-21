@@ -16,6 +16,7 @@ from statistics import mean, stdev
 from skimage.external import tifffile
 from register import combine_roi, roi2mat
 import pickle
+from sklearn import preprocessing
 
 def normalize(vector):
     # unpack
@@ -25,7 +26,7 @@ def normalize(vector):
     # divide by length
     return (x/length, y/length, z/length)
 
-def findCong(time, dist, max_dist = 6):
+def findCong(time, dist, max_dist = 15):
     t_cong = 0
     t_prev = time[0]-1
     all_periods = []
@@ -261,7 +262,7 @@ class pairer(object):
                 if t_stop - t_start < self.min_overlap:
                     f.write(str(int(myTrack.id)) + ' and ' + str(int(nbr.id)) + ' not pair: overlap time too short\n')
                     continue
-                # 4) find avg distance: if greater than 20 microns, out
+                # 4) find avg distance: if greater than 8 microns, out
                 dist, centers, normals, time = self.findDist(myTrack.id, nbr.id)
                 avg_dist = mean(dist)
                 if avg_dist > self.max_dist:
@@ -322,14 +323,17 @@ def cell2df(cells):
     return df
         
 if __name__ == "__main__":
-    os.chdir("../data/2018-01-17_GSC_L4_L4440_RNAi/")
+    
+   
     xml_path = 'r_germline.xml'
     
-    #--below for 0716 folder----------------
-    #trans_mat = pd.read_csv("ROI.csv", header = None)
-    #trans_mat = roi2mat(trans_mat)
+#    #--below for 0716 folder----------------
+#    os.chdir("../data/2018-07-16_GSC_L4_L4440_RNAi_T0/")
+#    trans_mat = pd.read_csv("ROI.csv", header = None)
+#    trans_mat = roi2mat(trans_mat)
     #########################################
-    #--below for 0116, 0117 folder-----------
+#    #--below for 0116, 0117 folder-----------
+    os.chdir("../data/2018-01-16_GSC_L4_L4440_RNAi/")
     mat1 = pd.read_csv("1.csv", header = None)
     mat1 = roi2mat(mat1)
     mat2 = pd.read_csv("2.csv", header = None)
@@ -347,10 +351,12 @@ if __name__ == "__main__":
     # generate features panel for ml clf
     X_df = pd.read_csv('features.csv', usecols = range(9))
     X = X_df.to_numpy()
-    # load the model from disk
+    min_max_scaler = preprocessing.MinMaxScaler()
+    X_minmax = min_max_scaler.fit_transform(X)
+#    # load the model from disk
     clf = pickle.load(open('../ML/myModel.sav', 'rb'))
     # predict
-    y_pred = clf.predict(X)
+    y_pred = clf.predict(X_minmax)
     df['Predicted_Label'] = y_pred
     df.to_csv ('predictions.csv', index = False, header=True)
 
