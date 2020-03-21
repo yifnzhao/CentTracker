@@ -15,6 +15,7 @@ from preprocess import spot
 from statistics import mean, stdev
 from skimage.external import tifffile
 from register import combine_roi, roi2mat
+import pickle
 
 def normalize(vector):
     # unpack
@@ -320,27 +321,39 @@ def cell2df(cells):
     df = pd.DataFrame(myDict)
     return df
         
+if __name__ == "__main__":
+    os.chdir("../data/2018-01-17_GSC_L4_L4440_RNAi/")
+    xml_path = 'r_germline.xml'
+    
+    #--below for 0716 folder----------------
+    #trans_mat = pd.read_csv("ROI.csv", header = None)
+    #trans_mat = roi2mat(trans_mat)
+    #########################################
+    #--below for 0116, 0117 folder-----------
+    mat1 = pd.read_csv("1.csv", header = None)
+    mat1 = roi2mat(mat1)
+    mat2 = pd.read_csv("2.csv", header = None)
+    mat2 = roi2mat(mat2)
+    trans_mat = combine_roi(mat1, mat2)
+    #########################################
+    trans_mat = trans_mat * 3
+    
+    # crude pairer, generate features
+    myPairer = pairer(xml_path, trans_mat)
+    cells = myPairer.findNeighbors()
+    df = cell2df(cells)
+    df.to_csv ('features.csv', index = False, header=True)
+    
+    # generate features panel for ml clf
+    X_df = pd.read_csv('features.csv', usecols = range(9))
+    X = X_df.to_numpy()
+    # load the model from disk
+    clf = pickle.load(open('../ML/myModel.sav', 'rb'))
+    # predict
+    y_pred = clf.predict(X)
+    df['Predicted_Label'] = y_pred
+    df.to_csv ('predictions.csv', index = False, header=True)
 
-os.chdir("../data/2018-07-16_GSC_L4_L4440_RNAi_T0/")
-xml_path = 'r_germline.xml'
-#--below for 0716 folder--
-#trans_mat = pd.read_csv("ROI.csv", header = None)
-#trans_mat = roi2mat(trans_mat)
-#--below for the other two--
-mat1 = pd.read_csv("1.csv", header = None)
-mat1 = roi2mat(mat1)
-mat2 = pd.read_csv("2.csv", header = None)
-mat2 = roi2mat(mat2)
-trans_mat = combine_roi(mat1, mat2)   
 
-
-
-myPairer = pairer(xml_path, trans_mat)
-cells = myPairer.findNeighbors()
-df = cell2df(cells)
-df.to_csv ('features.csv', index = False, header=True)
-#TODO: 1) label the dataset by 0 or 1, training set, test set (another script)
-#TODO: 2) create pandas dataframe, turn CELLS into a dictionary, exclude id and center coords
-#TODO: 3) classifier
 
 
