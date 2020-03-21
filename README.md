@@ -135,8 +135,8 @@ The following classifiers are selected for testing:
   - accuracy score: 0.9613259668508287
   - classification report:
 
-|| precision    | recall    |f1-score|support|
-  | :------------- | :------------- | :------------- | :------------- |
+|     | precision    | recall    |f1-score|support|
+  | ------------- |------------- | ------------- | ------------- | ------------- |
   | 0      | 0.95        | 1.00       | 0.98   | 141|
   | 1      | 1.00     | 0.82      | 0.90   | 40|
   |accuracy|||0.96|181|
