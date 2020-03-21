@@ -2,6 +2,8 @@
 
 This document describes the steps to track and pair centrosomes from time-lapse movies of *C. elegans* germline.
 
+## Usage
+
 #### Materials and Requirements
 - a registered time-lapse tiff movie and its correponding translation matrix (i.e., the ROI csv files), see [this repository](https://github.com/gerhold-lab/Semi-automated-GSC-registration/) for registration.
 - [FIJI](https://imagej.net/Fiji) (with [TrackMate](https://imagej.net/TrackMate) installed)
@@ -57,3 +59,5 @@ y_pred = clf.predict(X)
 df['Predicted_Label'] = y_pred
 df.to_csv ('predictions.csv', index = False, header=True)
 ```
+
+## How I built the model
