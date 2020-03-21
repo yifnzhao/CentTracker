@@ -66,6 +66,7 @@ df['Predicted_Label'] = y_pred
 df.to_csv ('predictions.csv', index = False, header=True)
 ```
 
+<<<<<<< HEAD
 ## How I built the model: a brief description of the classifier development pipeline
 ### 1 Data Preprocessing
 
