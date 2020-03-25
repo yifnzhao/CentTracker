@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 from preprocess import spot
 from statistics import mean, stdev
 from skimage.external import tifffile
-from register import combine_roi, roi2mat
+from register import combine
 import pickle
 from sklearn import preprocessing
 
@@ -24,6 +24,8 @@ def normalize(vector):
     # calculate length
     length = (x**2 + y**2 + z**2)**0.5
     # divide by length
+    if length == 0:
+        return (0,0,0)
     return (x/length, y/length, z/length)
 
 def findCong(time, dist, max_dist = 15):
@@ -82,11 +84,10 @@ class track(object):
 
 
 class pairer(object):
-    def __init__(self, xml, translation_matrix):
+    def __init__(self, xml):
         self.xml_path = xml
         self.min_overlap = 10
-        self.max_dist = 30 # 7-8 microns
-        self.trans_mat = translation_matrix
+        self.max_dist = 50 # 7-8 microns
         self.nbrTracks = []
         self.allTracks = {}
         self.allSpots = {}
@@ -203,37 +204,22 @@ class pairer(object):
         '''
         Finds the distance of cell center to the closest border
         - im: unregistered tiff
-        - trans_mat
         '''
-        with tifffile.TiffFile('u_germline.tif') as tif:    
+        with tifffile.TiffFile('r_germline.tif') as tif:    
             tif_tags = {}
             for tag in tif.pages[0].tags.values():
                 name, value = tag.name, tag.value
                 tif_tags[name] = value
-                
-        translation = np.array(self.trans_mat).astype(int)
-        
-        # search for extrema  
-        x_low , y_low = 0, 0
         x_dim, y_dim = tif_tags['image_width'], tif_tags['image_length']
-        for t in range(len(translation)): 
-            trans_x, trans_y = translation[t]
-            if trans_y < y_low:
-                y_low = trans_y
-            if trans_x < x_low:
-                x_low = trans_x       
-                
         for myCell in self.cells:          
             # unpack cell_center
             x, y, z = myCell.center
-            # find original coords (before registration)
-            adj_x, adj_y = x+x_low, y+y_low
-            toTop = adj_y
-            toBottom = y_dim - adj_y
-            toLeft = adj_x
-            toRight = x_dim - adj_x
+            toTop = y
+            toBottom = y_dim - y 
+            toLeft = x
+            toRight = x_dim - x
             myCell.dist_center_to_border = min([toTop, toBottom, toLeft, toRight])
-        
+
     def findNeighbors(self):
         f = open("console.txt", "w")
         # 1. tracks and edges bookkeeping
@@ -321,45 +307,39 @@ def cell2df(cells):
         myDict['centID_j'].append(myCell.centID_j)
     df = pd.DataFrame(myDict)
     return df
-        
-if __name__ == "__main__":
-    
-   
+
+def pair(folder):
     xml_path = 'r_germline.xml'
-    
-#    #--below for 0716 folder----------------
-#    os.chdir("../data/2018-07-16_GSC_L4_L4440_RNAi_T0/")
-#    trans_mat = pd.read_csv("ROI.csv", header = None)
-#    trans_mat = roi2mat(trans_mat)
-    #########################################
-#    #--below for 0116, 0117 folder-----------
-    os.chdir("../data/2018-01-16_GSC_L4_L4440_RNAi/")
-    mat1 = pd.read_csv("1.csv", header = None)
-    mat1 = roi2mat(mat1)
-    mat2 = pd.read_csv("2.csv", header = None)
-    mat2 = roi2mat(mat2)
-    trans_mat = combine_roi(mat1, mat2)
-    #########################################
-    trans_mat = trans_mat * 3
+    os.chdir(folder)
     
     # crude pairer, generate features
-    myPairer = pairer(xml_path, trans_mat)
+    myPairer = pairer(xml_path)
     cells = myPairer.findNeighbors()
     df = cell2df(cells)
-    df.to_csv ('features.csv', index = False, header=True)
+    df.to_csv ('r_features.csv', index = False, header=True)
+    print("Potential pairs generated.")
     
     # generate features panel for ml clf
-    X_df = pd.read_csv('features.csv', usecols = range(9))
+    X_df = pd.read_csv('r_features.csv', usecols = range(9))
     X = X_df.to_numpy()
-    min_max_scaler = preprocessing.MinMaxScaler()
-    X_minmax = min_max_scaler.fit_transform(X)
-#    # load the model from disk
+    
+    # load the model from disk
     clf = pickle.load(open('../ML/myModel.sav', 'rb'))
     # predict
-    y_pred = clf.predict(X_minmax)
+    y_pred = clf.predict(X)
     df['Predicted_Label'] = y_pred
     df.to_csv ('predictions.csv', index = False, header=True)
-
-
-
-
+    print("Predictions generated.")
+    
+        
+if __name__ == "__main__":
+   
+    root = "/Users/yifan/Dropbox/ZYF/dev/GitHub/automated-centrosome-pairing/data/"
+    folder1 = root+"2018-01-16_GSC_L4_L4440_RNAi/"
+    folder2 = root+"2018-01-17_GSC_L4_L4440_RNAi/"
+    folder3 = root+"2018-07-16_GSC_L4_L4440_RNAi_T0/"
+    folder4 = root+"C2-20191028_test1_20C_s1"
+#    pair(folder1)
+#    pair(folder2)
+#    pair(folder3)
+    pair(folder4)

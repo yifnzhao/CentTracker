@@ -29,7 +29,8 @@ def roi2mat(roi_df):
 
 def combine_roi(mat1, mat2):
     last_x, last_y = mat1[-1]
-    mat2 =  [(a+last_x, b+last_y) for a, b in mat2 ]
+    mat2 = [(a+last_x, b+last_y) for a, b in mat2 ]
+    mat2 = mat2[1:]
     mat = mat1 + mat2
     return mat
     
@@ -74,26 +75,24 @@ def translate(im_in, translation, hi_res = False, compression = 3, padzeros = Tr
         y_low, y_high  = 0, y_dim
         for t in range(n_frame): 
             trans_x, trans_y = translation[t]
-            if trans_y < y_low:
-                y_low = trans_y
-            if y_dim+trans_y > y_high:
-                    y_high = y_dim+trans_y
-            if trans_x < x_low:
-                x_low = trans_x
-            if x_dim+trans_x > x_high:
-                    x_high = x_dim+trans_x
+            if -trans_y < y_low:
+                y_low = -trans_y
+            if y_dim-trans_y > y_high:
+                y_high = y_dim-trans_y
+            if -trans_x < x_low:
+                x_low = -trans_x
+            if x_dim-trans_x > x_high:
+                x_high = x_dim-trans_x
         
 
         x_high, x_low, y_high, y_low = int(x_high), int(x_low), int(y_high), int(y_low)
-        x_dim_adj, y_dim_adj = x_high-2*x_low, y_high - 2*y_low
-#        x_diff, y_diff = x_dim_adj-x_dim, y_dim_adj-y_dim #-1 for indexing
+        x_dim_adj, y_dim_adj = x_high-x_low, y_high-y_low
         #create empty tiff
         im_out = numpy.zeros((n_frame, n_zstep, y_dim_adj, x_dim_adj))
         # translate
         for t in range(n_frame):
             if t%20 == 0:
                 print("Start processing t = " + str(t))
-#             if t>10: break
             trans_x, trans_y = translation[t]
             for z in range(n_zstep):
                 for y in range(y_dim):
@@ -134,24 +133,41 @@ def register(tiff_path, trans_mat, highres = False, compress = 3, pad = True):
     return tif_tags
 
 
+def combine(n_csv = 2):
+    mat = pd.read_csv("1.csv", header = None)
+    mat = roi2mat(mat)
+    counter = 2
+    while counter<=n_csv:
+        nextMat = pd.read_csv(str(counter) + ".csv", header = None)
+        nextMat = roi2mat(nextMat)
+        mat = combine_roi(mat, nextMat)
+        counter+=1
+    return mat
+
+def super_register(folder, n_roi, high_res = True, compress = 3):
+    os.chdir(folder)
+    trans_mat = combine(n_csv = n_roi)
+    tiff_path = 'u_germline.tif'
+    metadata = register(tiff_path, trans_mat, highres = high_res, compress = compress)
+    return metadata   
+    
+
 if __name__ == "__main__":
     
-    # example usage
-    os.chdir("../data/2018-01-16_GSC_L4_L4440_RNAi/")
-
-    # --- step 1: get transformation matrix (2D) ---
-    mat1 = pd.read_csv("1.csv", header = None)
-    mat1 = roi2mat(mat1)
-    mat2 = pd.read_csv("2.csv", header = None)
-    mat2 = roi2mat(mat2)
-    trans_mat = combine_roi(mat1, mat2)
+    root = "/Users/yifan/Dropbox/ZYF/dev/GitHub/automated-centrosome-pairing/data/"
+    folder1 = root+"2018-01-16_GSC_L4_L4440_RNAi/"
+    folder2 = root+"2018-01-17_GSC_L4_L4440_RNAi/"
+    folder3 = root+"2018-07-16_GSC_L4_L4440_RNAi_T0/"
+    super_register(folder1, n_roi = 2, high_res = True, compress = 3)
+    super_register(folder2, n_roi = 2, high_res = True, compress = 3)
+    super_register(folder3, n_roi = 1, high_res = True, compress = 3)
     
-#    # --- step 2: get ground truth tiff (low res) ---
-#    tiff_path = 'low_res.tif'
-#    metadata = register(tiff_path, trans_mat)
     
-    # --- step 3: get ground truth tiff (high res) ---
-    tiff_path = 'u_germline.tif'
-    metadata = register(tiff_path, trans_mat, highres = True, compress = 3)
+    
+    
+    
+    
+    
+    
     
     

@@ -90,7 +90,7 @@ The TrackMate output is parsed to generate the following information:
   - if track duration < 10 frames (= 5 min), discard
 - For every potential track pair, the following filters are applied:
   - if the time period of overlap between the pair is less than 10 frames, discard
-  - if the mean distance* between the pair is greater than 8 microns (about 30 voxels), discard
+  - if the mean distance* between the pair is greater than 12 microns (about 50 voxels), discard
 
 Additionally, the following statistics are calculated:
 
@@ -118,7 +118,6 @@ The following classifiers are selected for testing:
 
 ###### 2) Data Preprocessing
   - Data: The current dataset consists of three 3D time-lapse microscopy movies of *C. elegans* taken under similar imaging conditions (courtesy of Réda Zellag) and corresponding trackmate output and manual labels. The trackmate output are first processed and features are generated as described in the sections above, Parsing, and Crude Filtering and Feature Generation.
-  - Normalization: Each feature is scaled and normalized individually so that it is in the range (0, 1) on the dataset.
   - Train-Test Split: the dataset is shuffled and split into training set (67%) and testing set (33%)
 
 ###### 3) Hyperparameter tuning
@@ -131,14 +130,14 @@ The following classifiers are selected for testing:
   ```
 
   ###### 4) Predict and Test
-  - precision score: 0.9631551440943706
-  - accuracy score: 0.9613259668508287
+  - precision score: 0.9698620804253906
+  - accuracy score: 0.9694915254237289
   - classification report:
 
 |     | precision    | recall    |f1-score|support|
   | ------------- |------------- | ------------- | ------------- | ------------- |
-  | 0      | 0.95        | 1.00       | 0.98   | 141|
-  | 1      | 1.00     | 0.82      | 0.90   | 40|
-  |accuracy|||0.96|181|
-  |macro avg   | 0.98 |     0.91  |    0.94   |    181|
-  |  weighted avg |0.96  |    0.96|      0.96 |      181|
+  | 0      | 0.98        | 0.98       | 0.98   | 256|
+  | 1      | 0.88     | 0.90     | 0.89   | 39|
+  |accuracy|||0.97|295|
+  |macro avg   | 0.93 |     0.94 |    0.93  |    295|
+  |  weighted avg |0.97  |    0.97|      0.97 |      295|
