@@ -25,8 +25,7 @@ In your data folder, you need to have the following:
 
 |File Name| Descriptions  	|
 |---	    |---	            |
-|ROI.csv  | Contains x-y coordinates that was used to register the original movie  |
-|u_germline.tif| The original movie, "u" for "unregistered" |
+|r_germline.tif| The registered movie, "r" for "registered" |
 |r_germline.xml   	| The xml output from TrackMate, using the registed movie, "r" for "registered"  |
 
 ### 3 Run the script: track_pairer.py
