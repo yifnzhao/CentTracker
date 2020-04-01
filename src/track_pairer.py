@@ -10,11 +10,10 @@ import numpy as np
 import pandas as pd
 from scipy.spatial import distance
 from xml_parser import parseTracks, parseSpots
+from register import findCroppedDim
 import matplotlib.pyplot as plt
 from preprocess import spot
 from statistics import mean, stdev
-from skimage.external import tifffile
-from register import combine
 import pickle
 from sklearn import preprocessing
 
@@ -59,8 +58,10 @@ class cell(object):
         self.center = None # xyz coords of center
         self.center_stdev = None
         self.normal_stdev = None
-        self.dist_center_to_border # dist from the center of cell to closest tiff border
-
+        self.dist2border = None # dist from the center of cell to closest tiff border
+        self.diam = None
+        self.intensity = None
+        self.contrast = None
         
         
 
@@ -81,10 +82,13 @@ class track(object):
         self.t_i = None
         self.t_f = None
         self.duration = None
+        self.contrast = None
+        self.intensity = None
+        self.diameter = None
 
 
 class pairer(object):
-    def __init__(self, xml):
+    def __init__(self, xml, DIM = None):
         self.xml_path = xml
         self.min_overlap = 10
         self.max_dist = 50 # 7-8 microns
@@ -93,10 +97,42 @@ class pairer(object):
         self.allSpots = {}
         self.allEdges = {}
         self.cells = []
+        self.top = None
+        self.bottom = None
+        self.left = None
+        self.right = None
+        self.DIM = DIM
         
-    def getAllTracks(self):
+        
+    def track_dist2border(self, x, y):
+        '''
+        Finds the distance of track mean position to the closest border
+        '''
+        
+        toTop = y - self.top
+        toBottom = self.bottom - y 
+        toLeft = x - self.left
+        toRight = self.right - x
+        return min([toTop, toBottom, toLeft, toRight])
+
+        
+    def getAllTracks(self, f):
+        # read tiff dim
+        if self.DIM == None:
+            self.top, self.bottom, self.left, self.right = findCroppedDim(tiff_path = 'r_germline.tif')
         # read from xml all info about tracks
         track_general, track_detail = parseTracks(self.xml_path)
+        # populate edge objects
+        for index, row in track_detail.iterrows():
+            myEdge = edge()
+            myEdge.source = int(row['SPOT_SOURCE_ID'])
+            myEdge.target = int(row['SPOT_TARGET_ID'])
+            myEdge.track_id = int(row['TRACK_ID'])
+            myEdge.t = float(int(row['EDGE_TIME'])) # round to nearest int
+            if myEdge.track_id in self.allEdges:
+                self.allEdges[myEdge.track_id][myEdge.t] = myEdge.source
+            else:
+                self.allEdges[myEdge.track_id] = {myEdge.t: myEdge.source}        
         # populate the track objects
         for index, row in track_general.iterrows():
             myTrack = track()
@@ -107,18 +143,20 @@ class pairer(object):
             myTrack.t_i = float(row['TRACK_START'])
             myTrack.t_f = float(row['TRACK_STOP'])
             myTrack.duration = float(row['TRACK_DURATION'])
+            myTrack.diameter, myTrack.contrast, myTrack.intensity = self.findTrackInfo(myTrack)
+            # border filter
+            dist2border = self.track_dist2border(myTrack.x, myTrack.y)
+            if dist2border <= 0: # track on border, discard the track
+                f.write(str(int(myTrack.id)) + ' not included: outside border\n')
+                continue
+#             track duration filter
+            if myTrack.duration < self.min_overlap:
+                f.write(str(int(myTrack.id)) +' not included: too short\n')
+                continue
+#             centrosome diameter filter
             self.allTracks[myTrack.id] = myTrack
             
-        for index, row in track_detail.iterrows():
-            myEdge = edge()
-            myEdge.source = int(row['SPOT_SOURCE_ID'])
-            myEdge.target = int(row['SPOT_TARGET_ID'])
-            myEdge.track_id = int(row['TRACK_ID'])
-            myEdge.t = float(int(row['EDGE_TIME'])) # round to nearest int
-            if myEdge.track_id in self.allEdges:
-                self.allEdges[myEdge.track_id][myEdge.t] = myEdge.source
-            else:
-                self.allEdges[myEdge.track_id] = {myEdge.t: myEdge.source}
+
         return self.allTracks
     
     def getAllSpots(self):
@@ -130,10 +168,29 @@ class pairer(object):
             mySpot.x = float(row['POSITION_X'])
             mySpot.y = float(row['POSITION_Y'])
             mySpot.z = float(row['POSITION_Z'])
+            mySpot.diam = float(row['ESTIMATED_DIAMETER'])
+            mySpot.maxInt = float(row['MAX_INTENSITY'])
+            mySpot.contrast = float(row['CONTRAST'])
             self.allSpots[mySpot.id] = mySpot
         return self.allSpots
     
-
+    def findTrackInfo(self, myTrack):
+        t = myTrack.t_i
+        maxInt = []
+        diam = []
+        contrast = []
+        while t <= myTrack.t_f:
+            if t not in self.allEdges[myTrack.id]: 
+                t+=1
+                continue
+            spotID = self.allEdges[myTrack.id][int(t)]
+            spot = self.allSpots[spotID]
+            maxInt.append(spot.maxInt)
+            contrast.append(spot.contrast)
+            diam.append(spot.diam)
+            t+=1
+        return mean(diam), mean(contrast), mean(maxInt)
+        
     
     def findDist(self, id_i, id_j, plot = False):
         '''
@@ -200,40 +257,29 @@ class pairer(object):
             plt.show()
         return sl, centers, normals, time
           
-    def find_dist_center_to_border(self):
+    def cell_dist2border(self):
         '''
         Finds the distance of cell center to the closest border
-        - im: unregistered tiff
         '''
-        with tifffile.TiffFile('r_germline.tif') as tif:    
-            tif_tags = {}
-            for tag in tif.pages[0].tags.values():
-                name, value = tag.name, tag.value
-                tif_tags[name] = value
-        x_dim, y_dim = tif_tags['image_width'], tif_tags['image_length']
         for myCell in self.cells:          
             # unpack cell_center
             x, y, z = myCell.center
-            toTop = y
-            toBottom = y_dim - y 
-            toLeft = x
-            toRight = x_dim - x
-            myCell.dist_center_to_border = min([toTop, toBottom, toLeft, toRight])
+            toTop = y - self.top
+            toBottom = self.bottom - y 
+            toLeft = x - self.left
+            toRight = self.right - x
+            myCell.dist2border = min([toTop, toBottom, toLeft, toRight])
 
-    def findNeighbors(self):
-        f = open("console.txt", "w")
-        # 1. tracks and edges bookkeeping
-        self.allTracks = self.getAllTracks()
-        # 2. spots bookkeeping
-        self.allSpots = self.getAllSpots()
-        # 3. find neighbors by crude filters
+    def findNeighbors(self, f):
         
-        for myTrack in self.allTracks.values():
-             # 1) if track duration less than 10, out
-            if myTrack.duration < self.min_overlap:
-                f.write(str(int(myTrack.id)) + ' excluded: track too short\n')
-                continue
-            
+        # 1. spots bookkeeping
+        self.allSpots = self.getAllSpots()
+        # 2. tracks and edges bookkeeping
+        self.allTracks = self.getAllTracks(f)
+
+        # 3. find neighbors by crude filters
+        print("Total number of tracks: " + str(len(self.allTracks)) )
+        for myTrack in self.allTracks.values():            
             for nbr in self.allTracks.values():
             
                 # 1) if track duration less than 10, out
@@ -273,17 +319,99 @@ class pairer(object):
                 myCell.center_stdev = (stdev_x**2 + stdev_y**2 + stdev_z**2)**0.5
                 myCell.normal_stdev = (stdev_x_n**2 + stdev_y_n**2 + stdev_z_n**2)**0.5
                 myCell.t_cong = findCong(time, dist)
+                myCell.contrast = (myTrack.contrast + nbr.contrast)/2
+                myCell.intensity = (myTrack.intensity + nbr.intensity)/2
+                myCell.diameter = (myTrack.diameter + nbr.diameter)/2
+                
                 self.cells.append(myCell)
                 #plot
                 #self.findDist(myTrack.id, nbr.id, plot = True)
         
-        self.find_dist_center_to_border()
+        self.cell_dist2border()
         
         return self.cells
+    def linkID(self, trackIDList):
+        '''
+        Creates a dictionary of trackID: [SpotIDs]
+        '''
+        track2spot = {}
+        spot2track = {}
+        for trackID in trackIDList:
+            track2spot[trackID] = []
+            track = self.allTracks[trackID]
+            start = track.t_i
+            stop = track.t_f            
+            t = start 
+            while t < stop :    
+                if t not in self.allEdges[trackID]: 
+                    t+=1
+                    continue
+                # get spot id
+                spotID = self.allEdges[trackID][t]
+                t+=1
+                track2spot[trackID].append(spotID)
+                spot2track[spotID] = trackID
+        return track2spot, spot2track
+        
+    def pred2SpotCSV(self):
+        pred = pd.read_csv('predictions.csv')
+        spots = parseSpots('r_germline.xml')
+        allTracks = []
+        allPairs = []
+        for index, row in pred.iterrows():
+            if int(row['Predicted_Label']) == 1 :
+                i = int(row['centID_i'])
+                j = int(row['centID_j'])
+                allTracks.append(i)
+                allTracks.append(j)
+                allPairs.append((i,j))
+        allTracks = list(set(allTracks)) # unique
+        track2spots, spot2track = self.linkID(allTracks) # link spot to track
+        for i, j in allPairs:
+            if (j,i) in allPairs:
+                allPairs.remove((j,i))
+                
+        allSpotIDs = []        
+        for k, v in track2spots.items():
+            allSpotIDs = allSpotIDs + v
+        mySpots = {}    
+        for index, row in spots.iterrows():
+            spotID = int(row['ID'])
+            if spotID in allSpotIDs:
+                row['TRACK_ID'] = spot2track[spotID]
+                mySpots[spotID]=row
+        
+        counter = 0
+        for i, j in allPairs:
+            counter+=1
+            spots_i = track2spots[i]
+            spots_j = track2spots[j]
+            name_i ='Cent_'+str(counter)+'a'
+            name_j ='Cent_'+str(counter)+'b'
+            for spotID in spots_i:
+                mySpots[spotID]['Label'] = name_i
+            for spotID in spots_j:
+                mySpots[spotID]['Label'] = name_j
+        temp = []
+        for k, v in mySpots.items():
+            temp.append(v)
+        df = pd.DataFrame(temp)
+        # reorder
+        df = df[["Label", "ID", "TRACK_ID",
+                 "QUALITY", "POSITION_X","POSITION_Y", 
+                 "POSITION_Z", "POSITION_T", "FRAME", 
+                 "RADIUS", "VISIBILITY", "MANUAL_COLOR", 
+                 "MEAN_INTENSITY", "MEDIAN_INTENSITY",
+                 "MIN_INTENSITY", "MAX_INTENSITY",
+                 "TOTAL_INTENSITY", "STANDARD_DEVIATION",
+                 "ESTIMATED_DIAMETER", "ESTIMATED_DIAMETER", "SNR"]]
+        df.to_csv('spots.csv', index=False)
+        return mySpots, allPairs
+
+
 
 def cell2df(cells):
     myDict = {'center_stdev': [],
-              'dist_center_to_border': [],
               'normal_stdev': [],
               'sl_f': [],
               'sl_i': [],
@@ -291,11 +419,13 @@ def cell2df(cells):
               'sl_min': [],
               't_cong': [],
               't_overlap': [],
+              'intensity': [],
+              'diameter': [],
+              'contrast': [],
               'centID_i': [],
               'centID_j': []}
     for myCell in cells:
         myDict['center_stdev'].append(myCell.center_stdev)
-        myDict['dist_center_to_border'].append(myCell.dist_center_to_border)
         myDict['normal_stdev'].append(myCell.normal_stdev)
         myDict['sl_f'].append(myCell.sl_f)
         myDict['sl_i'].append(myCell.sl_i)
@@ -303,24 +433,38 @@ def cell2df(cells):
         myDict['sl_min'].append(myCell.sl_min)
         myDict['t_cong'].append(myCell.t_cong)
         myDict['t_overlap'].append(myCell.t_overlap)
+        myDict['intensity'].append(myCell.intensity)
+        myDict['diameter'].append(myCell.diameter)
+        myDict['contrast'].append(myCell.contrast)
         myDict['centID_i'].append(myCell.centID_i)
         myDict['centID_j'].append(myCell.centID_j)
+       
+        
+        
     df = pd.DataFrame(myDict)
     return df
 
-def pair(folder):
+def pair(folder, dim = None):
+    
     xml_path = 'r_germline.xml'
     os.chdir(folder)
-    
+    f = open("console.txt", "w")
+    print('Processing folder: ' + folder)
     # crude pairer, generate features
-    myPairer = pairer(xml_path)
-    cells = myPairer.findNeighbors()
+    if dim == None:
+        myPairer = pairer(xml_path)
+    else: 
+        myPairer = pairer(xml_path, DIM = dim)
+        myPairer.left, myPairer.right, myPairer.top, myPairer.bottom = dim 
+    
+    cells = myPairer.findNeighbors(f)
+    
     df = cell2df(cells)
     df.to_csv ('r_features.csv', index = False, header=True)
     print("Potential pairs generated.")
     
     # generate features panel for ml clf
-    X_df = pd.read_csv('r_features.csv', usecols = range(9))
+    X_df = pd.read_csv('r_features.csv', usecols = range(11))
     X = X_df.to_numpy()
     
     # load the model from disk
@@ -330,7 +474,10 @@ def pair(folder):
     df['Predicted_Label'] = y_pred
     df.to_csv ('predictions.csv', index = False, header=True)
     print("Predictions generated.")
+    f.close()
     
+    myPairer.pred2SpotCSV()
+
         
 if __name__ == "__main__":
    
@@ -338,8 +485,28 @@ if __name__ == "__main__":
     folder1 = root+"2018-01-16_GSC_L4_L4440_RNAi/"
     folder2 = root+"2018-01-17_GSC_L4_L4440_RNAi/"
     folder3 = root+"2018-07-16_GSC_L4_L4440_RNAi_T0/"
-    folder4 = root+"C2-20191028_test1_20C_s1"
-#    pair(folder1)
-#    pair(folder2)
-#    pair(folder3)
-    pair(folder4)
+    folder4 = root+"C2-20191028_test3_25C_s1/"
+    f0 = root+"C2-20191028_test1_20C_s1"
+    f1 = root+"C2-20191028_test1_20C_s2"
+    f2 = root+"C2-20191029_test1_20C_s2" # (39,408,115,1018) left, right, top, bottom
+    f3 = root+"C2-20191029_test1_20C_s1" # (59,512, 59, 940) left, right, top, bottom
+    f4 = root+"C2-20191011_test3_20C_s1" # (45, 396, 110, 944)
+    pair(f0)
+    pair(f1)
+    pair(f2, dim = (39,408,115,1018))
+    pair(f3, dim = (59,512, 59, 940))
+#    pair(f4, dim = (45, 396, 110, 944))
+    
+#    xml_path = 'r_germline.xml'
+#    
+#    os.chdir(f1)
+#    f = open("console.txt", "w")
+##     crude pairer, generate features
+#    
+#    myPairer = pairer(xml_path)
+#    cells = myPairer.findNeighbors(f)
+#    while 1:
+#        i = input("i:")
+#        j = input("j:")
+#        myPairer.findDist(int(i),int(j),plot = True)
+#        

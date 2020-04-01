@@ -15,13 +15,12 @@ import numpy as np
 import pandas as pd
 
 
-def parseSpots(trackmate_xml_path, get_tracks=False):
+def parseSpots(trackmate_xml_path):
     """Import detected peaks with TrackMate Fiji plugin.
     Parameters
     ----------
     trackmate_xml_path : str
         TrackMate XML file path.
-    get_tracks : boolean
         Add tracks to label
     """
 
@@ -45,8 +44,6 @@ def parseSpots(trackmate_xml_path, get_tracks=False):
             objects.append(single_object)
 
     trajs = pd.DataFrame(objects, columns=features)
-#    trajs = trajs.astype(np.float)
-
 
     return trajs
 
@@ -116,19 +113,38 @@ def parseTracks(trackmate_xml_path):
                     'DISPLACEMENT'])
     df2 = df2.astype(np.float)
     
-    return df, df2   
+    return df, df2
+
+def parseDim(trackmate_xml_path):
+    f=open(trackmate_xml_path)
+    ln=f.readline().split()
+    while ln[0] != 'Geometry:':
+        ln=f.readline().split()
+    ln=f.readline().split()
+    X = int(ln[4][:-1])
+    ln=f.readline().split()
+    Y = int(ln[4][:-1])
+    ln=f.readline().split()
+    Z = int(ln[4][:-1])
+    ln=f.readline().split()
+    T = int(ln[4][:-1]) 
+    f.close()
+    return (X,Y,Z,T)
+    
 #------------------------------
 # Example Usage
 #------------------------------
 if __name__ == "__main__":       
     
-    os.chdir("../data/2018-07-16_GSC_L4_L4440_RNAi_T0/")
+    os.chdir("../data/C2-20191028_test1_20C_s1/")
     trackmate_xml_path = "r_germline.xml"
     #------parsing xml into 3 pandas dataframes: spots, tracks, edges----------
-    print("Start to parse the Trackmate XML file. Please wait....")
+#    print("Start to parse the Trackmate XML file. Please wait....")
     spots = parseSpots(trackmate_xml_path) 
     print("The TrackMate XML file has been parsed into Pandas Dataframes.")
     
     #------writing the dataframes into csv files-------------------------------
     spots.to_csv(path_or_buf=trackmate_xml_path[:-4] + '_spots.csv', index=False)
+
     
+          

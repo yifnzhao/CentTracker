@@ -15,6 +15,7 @@ import numpy as np
 from register import translate
 import matplotlib.pyplot as plt
 
+
 class spot(object):
     def __init__(self):
         self.x = None
@@ -23,17 +24,17 @@ class spot(object):
         self.t = None
         self.id = None
         self.raw_int = None
-
         self.Nbr = None
         self.currLoc = None
-        
         self.sumInt = None
         self.next = None
-        
         self.intRatio = None
         self.dist = None
-        
         self.summinRatio = None
+        self.diam = None
+        self.maxInt = None
+        self.contrast = None
+        
         
 class pairer(object):
     def __init__(self, maxIntensityRatio = 0.2, maxDistPair = 10, maxDistPairCenter = 10):
@@ -47,7 +48,7 @@ class pairer(object):
     
     def merge(self, xml_path):
         # parse trackmaet output xml
-        spots_path = xml_path[:-4] + '_spots.csv'
+        spots_path = 'u_spots.csv'
         spots = parseSpots(xml_path)
         spots.to_csv(path_or_buf= spots_path, index=False)
         
@@ -56,7 +57,7 @@ class pairer(object):
                        usecols = ['ID', 'name' ,'POSITION_X','POSITION_Y', 
                                   'POSITION_Z', 'POSITION_T', 'FRAME'])
         # load intensity csv file
-        int_path = xml_path[:-4] + '_IntensityMeasurements.csv'
+        int_path = 'u_germline_intensity.csv'
         int_df = pd.read_csv(int_path, usecols = ['RawIntDen'])
         
         self.spots_merged_df = pd.concat([coords_df, int_df], sort = False, axis = 1)
@@ -128,14 +129,32 @@ class pairer(object):
                     nbr_list.append(mySpot.Nbr.id)
                     self.true_pairs[t].append(mySpot)
                     n_pair+=1
+                    
             
             if verbose == True: 
                 print('Time = ' + str(t) + ': ' + str(n_pair) + " pairs found.") 
             
-        with open('true_pairs.pkl', 'wb') as f:
+        with open('spot_pairs.pkl', 'wb') as f:
             pickle.dump(self.true_pairs, f)
-        return self.true_pairs
+        cell_df = self.cell2df()
+        return cell_df
                     
+    def cell2df(self):
+        cell_list = []
+        for time, spots_t in self.true_pairs.items():
+            for s in spots_t:
+                x,y,z = s.currLoc
+                t = time
+                sumInt = s.sumInt
+                id_i = s.id
+                id_j = s.Nbr.id
+                sl = s.dist #spindle length
+                info = [t,z,y,x,id_i, id_j, sl, sumInt]
+                cell_list.append(info)
+                
+        cell_df = pd.DataFrame(columns=['t','Z_UM','Y_UM','X_UM','ID_I','ID_J','SL_UM','SUMINT'], data=cell_list)
+        cell_df.to_csv("cell.csv")
+        return cell_df
     
     def link(self, weighted_m = True, verbose = True):
         trans_mat = [np.zeros(2).astype(int)]
@@ -217,22 +236,25 @@ class pairer(object):
         
 
 if __name__ == '__main__':        
-
-    os.chdir("../data/0815/")
-    xml_path = 'C2-20190815_test4_20C_s1.xml'
-    tiff_path = 'C2-20190815_test4_20C_s1.tif'
-    lr_tiff_path = 'low-res-C2-20190815_test4_20C_s1.tif'
+    os.chdir('/Users/yifan/Dropbox/ZYF/dev/GitHub/automated-centrosome-pairing/data/2018-01-17_GSC_L4_L4440_RNAi/')
+    xml_path = 'u_germline.xml'
+    tiff_path = 'u_germline.tif'
+    #initialize
     mySpotsPairer = pairer()
+    # merge
     mySpotsPairer.merge(xml_path)
+    # find true pairs
     true_pairs = mySpotsPairer.findTruePair(verbose = False)
-    trans_mat = mySpotsPairer.link(weighted_m = True, verbose = False)
-    mySpotsPairer.scatter_int_dist()
-
-    ratio_p_um = 8.53
-    ratio_low_res = 1/3
-
-    
-    
+   
+    # get trans_mat
+#    trans_mat = mySpotsPairer.link(weighted_m = True, verbose = False)
+#    mySpotsPairer.scatter_int_dist()
+#
+#    ratio_p_um = 8.53
+#    ratio_low_res = 1/3
+#
+#    
+#    
     
     
     

@@ -124,7 +124,7 @@ def register(tiff_path, trans_mat, highres = False, compress = 3, pad = True):
     
     # register using trans_mat
     im_out = translate(im_in, trans_mat, hi_res = highres, compression = compress, padzeros = pad)
-    im_out = im_out.astype('uint16')
+    im_out = im_out.c
     
     # save registered tiff, no compression
     with tifffile.TiffWriter("r_" + tiff_path, bigtiff = highres) as tif:
@@ -150,7 +150,44 @@ def super_register(folder, n_roi, high_res = True, compress = 3):
     tiff_path = 'u_germline.tif'
     metadata = register(tiff_path, trans_mat, highres = high_res, compress = compress)
     return metadata   
-    
+
+def findCroppedDim(tiff_path = 'r_germline.tif'):
+    with tifffile.TiffFile(tiff_path) as tif:
+            # read tiff
+            im_in = tif.asarray()
+            n_frame, n_zstep, y_dim, x_dim = im_in.shape
+            top = 0
+            bottom = y_dim
+            left = 0    
+            right = x_dim
+            
+            for t in range(n_frame):
+                # top border
+                y = 0
+                while im_in[t][0][y][int(x_dim/2)] == 0:
+                    y+=1
+                if top < y:
+                    top = y
+                # bottom border
+                y = y_dim - 1
+                while im_in[t][0][y][int(x_dim/2)] == 0:
+                    y-=1
+                if bottom > y:
+                    bottom = y
+                
+                # left border
+                x = 0
+                while im_in[t][0][int(y_dim/2)][x] == 0:
+                    x+=1
+                if left < x:
+                    left = x
+                # right border
+                x = x_dim - 1
+                while im_in[t][0][int(y_dim/2)][x] == 0:
+                    x-=1
+                if right > x:
+                    right = x
+    return top, bottom, left, right            
 
 if __name__ == "__main__":
     
@@ -158,13 +195,15 @@ if __name__ == "__main__":
     folder1 = root+"2018-01-16_GSC_L4_L4440_RNAi/"
     folder2 = root+"2018-01-17_GSC_L4_L4440_RNAi/"
     folder3 = root+"2018-07-16_GSC_L4_L4440_RNAi_T0/"
-    super_register(folder1, n_roi = 2, high_res = True, compress = 3)
-    super_register(folder2, n_roi = 2, high_res = True, compress = 3)
-    super_register(folder3, n_roi = 1, high_res = True, compress = 3)
+    folder4 = root+"C2-20191028_test3_25C_s1/"
+#    super_register(folder1, n_roi = 2, high_res = True, compress = 3)
+#    super_register(folder2, n_roi = 2, high_res = True, compress = 3)
+#    super_register(folder3, n_roi = 1, high_res = True, compress = 3)
+#    super_register(folder4, n_roi = 4, high_res = True, compress = 3)
+    os.chdir(folder1)
+    tiff_path = 'r_germline.tif'
     
-    
-    
-    
+            
     
     
     
