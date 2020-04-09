@@ -1,11 +1,13 @@
-# Semi-automated Centrosome Pairing
+# CentTracker: A trainable software for automated centrosome tracking and pairing in *C. elegans* germline
 
 This document describes the steps to track and pair centrosomes from time-lapse movies of *C. elegans* germline.
 
-## Usage
+* ** The batch processing pipeline tutorial is currently under development. Below we introduce the steps and development of track classification task (with a registered movie), and the detailed registration tutorial and source code can be found in [this repository](https://github.com/gerhold-lab/Semi-automated-GSC-registration/).
+
+## Usage (of Track Pair Classifier)
 
 #### Materials and Requirements
-- a registered time-lapse tiff movie and its correponding translation matrix (i.e., the ROI csv files), see [this repository](https://github.com/gerhold-lab/Semi-automated-GSC-registration/) for registration.
+- a registered time-lapse tiff movie
 - [FIJI](https://imagej.net/Fiji) (with [TrackMate](https://imagej.net/TrackMate) installed)
 - numpy
 - pandas
