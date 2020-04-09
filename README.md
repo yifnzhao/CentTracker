@@ -2,7 +2,7 @@
 
 This document describes the steps to track and pair centrosomes from time-lapse movies of *C. elegans* germline.
 
-* ** The batch processing pipeline tutorial is currently under development. Below we introduce the steps and development of track classification task (with a registered movie), and the detailed registration tutorial and source code can be found in [this repository](https://github.com/gerhold-lab/Semi-automated-GSC-registration/).
+* **The batch processing pipeline tutorial is currently under development. Below we introduce the steps and development of track classification task (with a registered movie), and the detailed registration tutorial and source code can be found in [this repository](https://github.com/gerhold-lab/Semi-automated-GSC-registration/).**
 
 ## Usage (of Track Pair Classifier)
 
