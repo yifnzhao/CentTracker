@@ -124,7 +124,7 @@ def register(tiff_path, trans_mat, highres = False, compress = 3, pad = True):
     
     # register using trans_mat
     im_out = translate(im_in, trans_mat, hi_res = highres, compression = compress, padzeros = pad)
-    im_out = im_out.c
+    im_out = im_out.astype('uint16')
     
     # save registered tiff, no compression
     with tifffile.TiffWriter("r_" + tiff_path, bigtiff = highres) as tif:

@@ -36,6 +36,7 @@ f['y'] = f['Y_UM'] * 5.5
 f['x'] = f['X_UM'] * 5.5
 f['frame'] = f['t']
 linked = tp.link_df(f, 1.0, pos_columns=['X_UM', 'Y_UM', 'Z_UM'])
+
 link_dict = {}
 for index, row in linked.iterrows():
     trackID = row['particle']
@@ -82,7 +83,7 @@ while t < duration:
 trans_mat = np.array(trans_mat).astype(int)
 true_trans_mat = np.array(combine(n_csv=2)) * 3
 
-metadata = register('lr_u_germline.tif', trans_mat, highres = True, compress = 1/3)
+metadata = register('u_germline.tif', trans_mat, highres = True, compress = 1)
 
 
 

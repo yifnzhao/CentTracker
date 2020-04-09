@@ -382,6 +382,7 @@ class pairer(object):
                 mySpots[spotID]=row
         
         counter = 0
+        allSpots = []
         for i, j in allPairs:
             counter+=1
             spots_i = track2spots[i]
@@ -389,13 +390,14 @@ class pairer(object):
             name_i ='Cent_'+str(counter)+'a'
             name_j ='Cent_'+str(counter)+'b'
             for spotID in spots_i:
-                mySpots[spotID]['Label'] = name_i
+                spotSeries = mySpots[spotID].copy()
+                spotSeries['Label'] = name_i
+                allSpots.append(spotSeries)
             for spotID in spots_j:
-                mySpots[spotID]['Label'] = name_j
-        temp = []
-        for k, v in mySpots.items():
-            temp.append(v)
-        df = pd.DataFrame(temp)
+                spotSeries = mySpots[spotID].copy()
+                spotSeries['Label'] = name_j
+                allSpots.append(spotSeries)
+        df = pd.DataFrame(allSpots)
         # reorder
         df = df[["Label", "ID", "TRACK_ID",
                  "QUALITY", "POSITION_X","POSITION_Y", 
@@ -405,8 +407,13 @@ class pairer(object):
                  "MIN_INTENSITY", "MAX_INTENSITY",
                  "TOTAL_INTENSITY", "STANDARD_DEVIATION",
                  "ESTIMATED_DIAMETER", "ESTIMATED_DIAMETER", "SNR"]]
+        
+        df['POSITION_Z'] = float(df['POSITION_Z']) / 2
+        df['POSITION_X'] = float(df['POSITION_X']) / 8.5
+        df['POSITION_Y'] = float(df['POSITION_Y']) / 8.5
         df.to_csv('spots.csv', index=False)
-        return mySpots, allPairs
+        print("Number of track pairs found: " + str(len(allPairs)))
+        return allSpots, allPairs
 
 
 
@@ -495,18 +502,39 @@ if __name__ == "__main__":
     pair(f1)
     pair(f2, dim = (39,408,115,1018))
     pair(f3, dim = (59,512, 59, 940))
-#    pair(f4, dim = (45, 396, 110, 944))
+    pair(f4, dim = (45, 396, 110, 944))
     
 #    xml_path = 'r_germline.xml'
 #    
 #    os.chdir(f1)
+#    xml_path = 'r_germline.xml'
+#    dim = None
 #    f = open("console.txt", "w")
-##     crude pairer, generate features
+#    print('Processing folder: ' +  f1)
+#    # crude pairer, generate features
+#    if dim == None:
+#        myPairer = pairer(xml_path)
+#    else: 
+#        myPairer = pairer(xml_path, DIM = dim)
+#        myPairer.left, myPairer.right, myPairer.top, myPairer.bottom = dim 
 #    
-#    myPairer = pairer(xml_path)
 #    cells = myPairer.findNeighbors(f)
-#    while 1:
-#        i = input("i:")
-#        j = input("j:")
-#        myPairer.findDist(int(i),int(j),plot = True)
-#        
+#    
+#    df = cell2df(cells)
+#    df.to_csv ('r_features.csv', index = False, header=True)
+#    print("Potential pairs generated.")
+#    
+#    # generate features panel for ml clf
+#    X_df = pd.read_csv('r_features.csv', usecols = range(11))
+#    X = X_df.to_numpy()
+#    
+#    # load the model from disk
+#    clf = pickle.load(open('../ML/myModel.sav', 'rb'))
+#    # predict
+#    y_pred = clf.predict(X)
+#    df['Predicted_Label'] = y_pred
+#    df.to_csv ('predictions.csv', index = False, header=True)
+#    print("Predictions generated.")
+#    f.close()
+#    
+#    mySpots, allPairs  = myPairer.pred2SpotCSV()   
