@@ -6,17 +6,18 @@ Created on Fri Feb 21 19:29:46 2020
 @author: yifan
 """
 import os
-import numpy as np
 import pandas as pd
 from scipy.spatial import distance
-from xml_parser import parseTracks, parseSpots
+from xmlParser import parseTracks, parseSpots
 from register import findCroppedDim
 import matplotlib.pyplot as plt
-from preprocess import spot
+from TransMatGenerator import spot,findConv
 from statistics import mean, stdev
 import pickle
-from sklearn import preprocessing
 
+################################################
+# Some helper functions
+################################################
 def normalize(vector):
     # unpack
     x, y, z = vector
@@ -27,7 +28,17 @@ def normalize(vector):
         return (0,0,0)
     return (x/length, y/length, z/length)
 
-def findCong(time, dist, max_dist = 15):
+
+def findCong(time, dist, max_dist):
+    """
+    Counts the number of continuous time points in which the two 
+        tracks are under max_dist microns away
+    - the time argument is a list of time points in which the two tracks are both present
+    
+    - the dist argument is the list of corresponding distances
+    
+    - the max_dist argument is a distance threshold (float or int)
+    """
     t_cong = 0
     t_prev = time[0]-1
     all_periods = []
@@ -42,9 +53,9 @@ def findCong(time, dist, max_dist = 15):
     all_periods.append(t_cong)
     return max(all_periods)
         
-        
-        
-
+################################################
+# Cell object
+################################################
 class cell(object):
     def __init(self):
         self.centID_i = None # track object, i
@@ -63,8 +74,9 @@ class cell(object):
         self.intensity = None
         self.contrast = None
         
-        
-
+################################################
+# Edge object
+################################################
 class edge(object):
     def __init__(self):
         self.source = None
@@ -72,7 +84,9 @@ class edge(object):
         self.track_id = None
         self.t = None
         
-
+################################################
+# Track object
+################################################
 class track(object):
     def __init__(self):
         self.x = None
@@ -86,12 +100,35 @@ class track(object):
         self.intensity = None
         self.diameter = None
 
-
-class pairer(object):
-    def __init__(self, xml, DIM = None):
+################################################
+# Pairer object
+################################################
+class TrackPairer(object):
+    def __init__(self,xml,conversion,DIM = None,maxdist=11,maxcongdist=4,minoverlap=10):
+        """
+        Initialzing a pairer object
+        
+        - The xml argument is path of the TrackMate xml input, as a string
+        
+        - The conversion argument is a dictionary of pixel to micon conversion for x, y, z
+        
+        - The DIM argument is an option for user to input the dimension (width,y=height) of the movie, optional
+        
+        - The maxdist argument is a distance threshold of how far away two paired centrosomes can be at any time point
+        
+        - The maxcongdist argument is a distance threshold of hor far away two centrosomes can be but still counted as "in congression"
+        
+        - The minoverlap argument is a duration threshold. Two tracks with fewer overlapped frames will be filtered.
+    
+        """
+        # store the provided variables
         self.xml_path = xml
-        self.min_overlap = 10
-        self.max_dist = 50 # 7-8 microns
+        self.min_overlap = minoverlap
+        self.max_dist = maxdist/conversion['x']
+        self.maxcongdist = maxcongdist/conversion['x']
+        self.DIM = DIM
+        
+        # create dynamic variables
         self.nbrTracks = []
         self.allTracks = {}
         self.allSpots = {}
@@ -101,14 +138,11 @@ class pairer(object):
         self.bottom = None
         self.left = None
         self.right = None
-        self.DIM = DIM
-        
         
     def track_dist2border(self, x, y):
         '''
         Finds the distance of track mean position to the closest border
         '''
-        
         toTop = y - self.top
         toBottom = self.bottom - y 
         toLeft = x - self.left
@@ -144,19 +178,17 @@ class pairer(object):
             myTrack.t_f = float(row['TRACK_STOP'])
             myTrack.duration = float(row['TRACK_DURATION'])
             myTrack.diameter, myTrack.contrast, myTrack.intensity = self.findTrackInfo(myTrack)
-            # border filter
+            # apply the border filter
             dist2border = self.track_dist2border(myTrack.x, myTrack.y)
             if dist2border <= 0: # track on border, discard the track
                 f.write(str(int(myTrack.id)) + ' not included: outside border\n')
                 continue
-#             track duration filter
+            # apply the track duration filter
             if myTrack.duration < self.min_overlap:
-                f.write(str(int(myTrack.id)) +' not included: too short\n')
+                f.write(str(int(myTrack.id)) +' not included: duration less than min_overlap\n')
                 continue
-#             centrosome diameter filter
+            # centrosome diameter filter
             self.allTracks[myTrack.id] = myTrack
-            
-
         return self.allTracks
     
     def getAllSpots(self):
@@ -197,15 +229,16 @@ class pairer(object):
         finds the distance between two tracks over time
         input: id_i and id_j are track id's
         '''
-        # x,y for plotting purpose
-        time = [] # list of time
-        sl = [] # list of corresponding distance 
+        # create list of time
+        time = [] 
+        # create a list of corresponding distance 
+        sl = []
         centers = {'x': [], 'y':[], 'z': []}
         normals = {'x': [], 'y':[], 'z': []}
-        #get track objects by id
+        # get track objects by id
         trackI = self.allTracks[id_i]
         trackJ = self.allTracks[id_j]
-        #find start and stop time (overlapped between two tracks)
+        # find start and stop time (overlapped between two tracks)
         start = max([trackI.t_i,trackJ.t_i])
         stop = min([trackI.t_f, trackJ.t_f])
         if stop - start <= 0:
@@ -213,8 +246,7 @@ class pairer(object):
         t = start 
         
         while t < stop :    
-
-            # calculate spindleLength
+            # calculate distance
             # find ids of spots from i, j
             if t not in self.allEdges[trackI.id]: 
                 # note: allEdges[trackI.id] is a dict, k is time, v is spot_id
@@ -238,7 +270,7 @@ class pairer(object):
             normal = ((ix-jx), (iy-jy), (iz-jz))
             # normalized normal vector
             n_normal = normalize(normal)
-    
+            # update dynamic variables
             time.append(t)
             sl.append(dist)
             centers['x'].append(center[0])
@@ -247,12 +279,10 @@ class pairer(object):
             normals['x'].append(n_normal[0])
             normals['y'].append(n_normal[1])
             normals['z'].append(n_normal[2])
-            t += 1
-            
+            t+=1
         if plot == True:    
             plt.plot(time, sl)
             plt.title(str(int(id_i)) + "-" + str(int(id_j)))
-        
             plt.savefig(str(int(id_i)) + "-" + str(int(id_j)) + '.png')
             plt.show()
         return sl, centers, normals, time
@@ -271,32 +301,31 @@ class pairer(object):
             myCell.dist2border = min([toTop, toBottom, toLeft, toRight])
 
     def findNeighbors(self, f):
-        
         # 1. spots bookkeeping
         self.allSpots = self.getAllSpots()
         # 2. tracks and edges bookkeeping
         self.allTracks = self.getAllTracks(f)
-
         # 3. find neighbors by crude filters
         print("Total number of tracks: " + str(len(self.allTracks)) )
         for myTrack in self.allTracks.values():            
             for nbr in self.allTracks.values():
-            
-                # 1) if track duration less than 10, out
+                # 1) if track duration less than min_overlap, out
                 if nbr.duration < self.min_overlap:
                     continue
                 # 2)  myTrack is the same track as nbr, out
                 elif myTrack.id == nbr.id:
                     continue
-                # 3) find period of overlap: if less than 10 frames, out
+                # 3) find period of overlap: if fewer frames than min_overlap , out
                 t_start = max([myTrack.t_i, nbr.t_i])
                 t_stop = min([myTrack.t_f, nbr.t_f])
                 if t_stop - t_start < self.min_overlap:
                     f.write(str(int(myTrack.id)) + ' and ' + str(int(nbr.id)) + ' not pair: overlap time too short\n')
                     continue
-                # 4) find avg distance: if greater than 8 microns, out
+                # 4) find max distance: if greater than max_dist um, out
                 dist, centers, normals, time = self.findDist(myTrack.id, nbr.id)
                 avg_dist = mean(dist)
+                max_dist = max(dist)
+                min_dist = min(dist)
                 if avg_dist > self.max_dist:
                     f.write(str(int(myTrack.id)) + ' and ' + str(int(nbr.id)) + ' not pair: too far away\n')
                     continue
@@ -307,8 +336,8 @@ class pairer(object):
                 myCell.t_overlap = t_stop - t_start
                 myCell.sl_i = dist[0]
                 myCell.sl_f = dist[-1]
-                myCell.sl_max = max(dist)
-                myCell.sl_min = min(dist)
+                myCell.sl_max = max_dist
+                myCell.sl_min = min_dist
                 myCell.center = (mean(centers['x']), mean(centers['y']), mean(centers['z']))
                 stdev_x = stdev(centers['x'])
                 stdev_y = stdev(centers['y'])
@@ -318,18 +347,14 @@ class pairer(object):
                 stdev_z_n = stdev(normals['z'])
                 myCell.center_stdev = (stdev_x**2 + stdev_y**2 + stdev_z**2)**0.5
                 myCell.normal_stdev = (stdev_x_n**2 + stdev_y_n**2 + stdev_z_n**2)**0.5
-                myCell.t_cong = findCong(time, dist)
+                myCell.t_cong = findCong(time, dist, self.maxcongdist)
                 myCell.contrast = (myTrack.contrast + nbr.contrast)/2
                 myCell.intensity = (myTrack.intensity + nbr.intensity)/2
                 myCell.diameter = (myTrack.diameter + nbr.diameter)/2
-                
                 self.cells.append(myCell)
-                #plot
-                #self.findDist(myTrack.id, nbr.id, plot = True)
-        
         self.cell_dist2border()
-        
         return self.cells
+    
     def linkID(self, trackIDList):
         '''
         Creates a dictionary of trackID: [SpotIDs]
@@ -353,7 +378,7 @@ class pairer(object):
                 spot2track[spotID] = trackID
         return track2spot, spot2track
         
-    def pred2SpotCSV(self):
+    def pred2SpotCSV(self,conversion):
         pred = pd.read_csv('predictions.csv')
         spots = parseSpots('r_germline.xml')
         allTracks = []
@@ -380,7 +405,6 @@ class pairer(object):
             if spotID in allSpotIDs:
                 row['TRACK_ID'] = spot2track[spotID]
                 mySpots[spotID]=row
-        
         counter = 0
         allSpots = []
         for i, j in allPairs:
@@ -408,14 +432,13 @@ class pairer(object):
                  "TOTAL_INTENSITY", "STANDARD_DEVIATION",
                  "ESTIMATED_DIAMETER", "ESTIMATED_DIAMETER", "SNR"]]
         
-        df['POSITION_Z'] = float(df['POSITION_Z']) / 2
-        df['POSITION_X'] = float(df['POSITION_X']) / 8.5
-        df['POSITION_Y'] = float(df['POSITION_Y']) / 8.5
+        df['POSITION_Z_UM'] = df['POSITION_Z'].astype('float') * conversion['z']
+        df['POSITION_X_UM'] = df['POSITION_X'].astype('float') * conversion['x']
+        df['POSITION_Y_UM'] = df['POSITION_Y'].astype('float') * conversion['y']
+        
         df.to_csv('spots.csv', index=False)
         print("Number of track pairs found: " + str(len(allPairs)))
         return allSpots, allPairs
-
-
 
 def cell2df(cells):
     myDict = {'center_stdev': [],
@@ -445,35 +468,28 @@ def cell2df(cells):
         myDict['contrast'].append(myCell.contrast)
         myDict['centID_i'].append(myCell.centID_i)
         myDict['centID_j'].append(myCell.centID_j)
-       
-        
-        
     df = pd.DataFrame(myDict)
     return df
 
-def pair(folder, dim = None):
-    
-    xml_path = 'r_germline.xml'
+def pair(folder,maxdist=11,maxcongdist=4,minoverlap=10,xml_path = 'r_germline.xml',dim=None,raw_tiff_path='u_germline.tif'):
     os.chdir(folder)
     f = open("console.txt", "w")
     print('Processing folder: ' + folder)
+    c = findConv(raw_tiff_path)
     # crude pairer, generate features
     if dim == None:
-        myPairer = pairer(xml_path)
+        myPairer = TrackPairer(xml_path,c,maxdist=maxdist,maxcongdist=maxcongdist,minoverlap=minoverlap)
     else: 
-        myPairer = pairer(xml_path, DIM = dim)
+        myPairer = TrackPairer(xml_path,c,DIM = dim,maxdist=maxdist,maxcongdist=maxcongdist,minoverlap=minoverlap)
         myPairer.left, myPairer.right, myPairer.top, myPairer.bottom = dim 
     
     cells = myPairer.findNeighbors(f)
-    
     df = cell2df(cells)
     df.to_csv ('r_features.csv', index = False, header=True)
     print("Potential pairs generated.")
-    
     # generate features panel for ml clf
     X_df = pd.read_csv('r_features.csv', usecols = range(11))
     X = X_df.to_numpy()
-    
     # load the model from disk
     clf = pickle.load(open('../ML/myModel.sav', 'rb'))
     # predict
@@ -482,59 +498,25 @@ def pair(folder, dim = None):
     df.to_csv ('predictions.csv', index = False, header=True)
     print("Predictions generated.")
     f.close()
-    
-    myPairer.pred2SpotCSV()
-
+    myPairer.pred2SpotCSV(c)
         
 if __name__ == "__main__":
    
     root = "/Users/yifan/Dropbox/ZYF/dev/GitHub/automated-centrosome-pairing/data/"
     folder1 = root+"2018-01-16_GSC_L4_L4440_RNAi/"
     folder2 = root+"2018-01-17_GSC_L4_L4440_RNAi/"
-    folder3 = root+"2018-07-16_GSC_L4_L4440_RNAi_T0/"
-    folder4 = root+"C2-20191028_test3_25C_s1/"
-    f0 = root+"C2-20191028_test1_20C_s1"
-    f1 = root+"C2-20191028_test1_20C_s2"
-    f2 = root+"C2-20191029_test1_20C_s2" # (39,408,115,1018) left, right, top, bottom
-    f3 = root+"C2-20191029_test1_20C_s1" # (59,512, 59, 940) left, right, top, bottom
-    f4 = root+"C2-20191011_test3_20C_s1" # (45, 396, 110, 944)
-    pair(f0)
-    pair(f1)
-    pair(f2, dim = (39,408,115,1018))
-    pair(f3, dim = (59,512, 59, 940))
-    pair(f4, dim = (45, 396, 110, 944))
-    
-#    xml_path = 'r_germline.xml'
+    pair(folder2,maxdist=11,maxcongdist=4,minoverlap=10,
+         xml_path='r_germline.xml',dim=None,raw_tiff_path='u_germline.tif')
+#    folder3 = root+"2018-07-16_GSC_L4_L4440_RNAi_T0/"
+#    folder4 = root+"C2-20191028_test3_25C_s1/"
+#    f0 = root+"C2-20191028_test1_20C_s1"
+#    f1 = root+"C2-20191028_test1_20C_s2"
+#    f2 = root+"C2-20191029_test1_20C_s2" # (39,408,115,1018) left, right, top, bottom
+#    f3 = root+"C2-20191029_test1_20C_s1" # (59,512, 59, 940) left, right, top, bottom
+#    f4 = root+"C2-20191011_test3_20C_s1" # (45, 396, 110, 944)
+#    pair(f0)
+#    pair(f1)
+#    pair(f2, dim = (39,408,115,1018))
+#    pair(f3, dim = (59,512, 59, 940))
+#    pair(f4, dim = (45, 396, 110, 944))
 #    
-#    os.chdir(f1)
-#    xml_path = 'r_germline.xml'
-#    dim = None
-#    f = open("console.txt", "w")
-#    print('Processing folder: ' +  f1)
-#    # crude pairer, generate features
-#    if dim == None:
-#        myPairer = pairer(xml_path)
-#    else: 
-#        myPairer = pairer(xml_path, DIM = dim)
-#        myPairer.left, myPairer.right, myPairer.top, myPairer.bottom = dim 
-#    
-#    cells = myPairer.findNeighbors(f)
-#    
-#    df = cell2df(cells)
-#    df.to_csv ('r_features.csv', index = False, header=True)
-#    print("Potential pairs generated.")
-#    
-#    # generate features panel for ml clf
-#    X_df = pd.read_csv('r_features.csv', usecols = range(11))
-#    X = X_df.to_numpy()
-#    
-#    # load the model from disk
-#    clf = pickle.load(open('../ML/myModel.sav', 'rb'))
-#    # predict
-#    y_pred = clf.predict(X)
-#    df['Predicted_Label'] = y_pred
-#    df.to_csv ('predictions.csv', index = False, header=True)
-#    print("Predictions generated.")
-#    f.close()
-#    
-#    mySpots, allPairs  = myPairer.pred2SpotCSV()   

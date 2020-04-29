@@ -151,6 +151,47 @@ def super_register(folder, n_roi, high_res = True, compress = 3):
     metadata = register(tiff_path, trans_mat, highres = high_res, compress = compress)
     return metadata   
 
+
+# find the pixel to um conversion using the original tiff
+def findConv(tiff_path):
+    with tifffile.TiffFile(tiff_path) as tif:
+        # read metadata as tif_tags (dict)
+        tif_tags = tif.pages[0].tags
+        found = 0
+        for t in tif_tags.values():
+            if t.name == 'x_resolution':
+                x_resolution = t.value
+                found+=1
+            elif t.name == 'y_resolution':
+                y_resolution = t.value
+                found+=1
+            elif t.name == 'image_description':
+                description = t.value.split()
+                found+=1
+            if found == 3:
+                break
+    for e in description:
+        if e[:8] == b'spacing=':
+            z = float(e[8:])
+            break
+    conversion = {'x': x_resolution[1]/x_resolution[0],
+                  'y': y_resolution[1]/y_resolution[0],
+                  'z': z}   
+    return conversion
+            
+            
+            
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
 def findCroppedDim(tiff_path = 'r_germline.tif'):
     with tifffile.TiffFile(tiff_path) as tif:
             # read tiff

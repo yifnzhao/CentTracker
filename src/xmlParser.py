@@ -11,10 +11,6 @@ import pandas as pd
 import os
 import xml.etree.cElementTree as et
 
-import numpy as np
-import pandas as pd
-
-
 def parseSpots(trackmate_xml_path):
     """Import detected peaks with TrackMate Fiji plugin.
     Parameters
