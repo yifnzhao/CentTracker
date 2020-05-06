@@ -9,10 +9,9 @@ import pandas as pd
 import os
 from scipy.spatial import distance
 from skimage.external import tifffile
-from xml_parser import parseSpots
+from xmlParser import parseSpots
 import pickle
 import numpy as np
-from register import translate
 import matplotlib.pyplot as plt
 import trackpy as tp
 
@@ -292,4 +291,4 @@ def generateTransMat(maxIntensityRatio=0.2,maxDistPair=11,maxDistPairCenter=11,x
     
 if __name__ == '__main__':        
     os.chdir('/Users/yifan/Dropbox/ZYF/dev/GitHub/automated-centrosome-pairing/data/2018-01-17_GSC_L4_L4440_RNAi/')
-    trans_mat = generateTransMat(maxIntensityRatio=0.2,maxDistPair=11,maxDistPairCenter=11,xml_path='u_germline.xml',tiff_path ='u_germline.tif')
+    trans_mat = generateTransMat(maxIntensityRatio=0.2,maxDistPair=11,maxDistPairCenter=11,xml_path='exportModel.xml',tiff_path ='u_germline.tif')

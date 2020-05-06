@@ -104,7 +104,7 @@ class track(object):
 # Pairer object
 ################################################
 class TrackPairer(object):
-    def __init__(self,xml,conversion,DIM = None,maxdist=11,maxcongdist=4,minoverlap=10):
+    def __init__(self,xml,conversion,DIM = None,maxdist=11,mindist=4,maxcongdist=4,minoverlap=10):
         """
         Initialzing a pairer object
         
@@ -120,11 +120,13 @@ class TrackPairer(object):
         
         - The minoverlap argument is a duration threshold. Two tracks with fewer overlapped frames will be filtered.
     
+        - The mindist arguent is a distance threshold of the minimum proximity two centrosomes must have for at least 1 time frame in order to be considered as "paired"
         """
         # store the provided variables
         self.xml_path = xml
         self.min_overlap = minoverlap
         self.max_dist = maxdist/conversion['x']
+        self.min_dist = mindist/conversion['x']
         self.maxcongdist = maxcongdist/conversion['x']
         self.DIM = DIM
         
@@ -329,6 +331,10 @@ class TrackPairer(object):
                 if avg_dist > self.max_dist:
                     f.write(str(int(myTrack.id)) + ' and ' + str(int(nbr.id)) + ' not pair: too far away\n')
                     continue
+                # 5) find min distance, if greater than min_dist microns, out FOR DEBUG
+                if min_dist > self.min_dist:
+                    f.write(str(int(myTrack.id)) + ' and ' + str(int(nbr.id)) + ' not pair: too far away (min distance filter) \n')
+                    continue
                 # filtering finished, fill in cell info
                 myCell = cell()
                 myCell.centID_i = myTrack.id
@@ -471,16 +477,16 @@ def cell2df(cells):
     df = pd.DataFrame(myDict)
     return df
 
-def pair(folder,maxdist=11,maxcongdist=4,minoverlap=10,xml_path = 'r_germline.xml',dim=None,raw_tiff_path='u_germline.tif'):
+def pair(folder,maxdist=11,mindist=4,maxcongdist=4,minoverlap=10,xml_path = 'r_germline.xml',dim=None,raw_tiff_path='u_germline.tif'):
     os.chdir(folder)
     f = open("console.txt", "w")
     print('Processing folder: ' + folder)
     c = findConv(raw_tiff_path)
     # crude pairer, generate features
     if dim == None:
-        myPairer = TrackPairer(xml_path,c,maxdist=maxdist,maxcongdist=maxcongdist,minoverlap=minoverlap)
+        myPairer = TrackPairer(xml_path,c,maxdist=maxdist,mindist=mindist,maxcongdist=maxcongdist,minoverlap=minoverlap)
     else: 
-        myPairer = TrackPairer(xml_path,c,DIM = dim,maxdist=maxdist,maxcongdist=maxcongdist,minoverlap=minoverlap)
+        myPairer = TrackPairer(xml_path,c,DIM = dim,maxdist=maxdist,mindist=mindist,maxcongdist=maxcongdist,minoverlap=minoverlap)
         myPairer.left, myPairer.right, myPairer.top, myPairer.bottom = dim 
     
     cells = myPairer.findNeighbors(f)
@@ -501,22 +507,9 @@ def pair(folder,maxdist=11,maxcongdist=4,minoverlap=10,xml_path = 'r_germline.xm
     myPairer.pred2SpotCSV(c)
         
 if __name__ == "__main__":
-   
     root = "/Users/yifan/Dropbox/ZYF/dev/GitHub/automated-centrosome-pairing/data/"
-    folder1 = root+"2018-01-16_GSC_L4_L4440_RNAi/"
     folder2 = root+"2018-01-17_GSC_L4_L4440_RNAi/"
-    pair(folder2,maxdist=11,maxcongdist=4,minoverlap=10,
+    folder1 = '/Users/yifan/Dropbox/ZYF/dev/GitHub/automated-centrosome-pairing/data/C2-20191028_test1_20C_s1/'
+    
+    pair(folder1,maxdist=11,maxcongdist=4,minoverlap=10,
          xml_path='r_germline.xml',dim=None,raw_tiff_path='u_germline.tif')
-#    folder3 = root+"2018-07-16_GSC_L4_L4440_RNAi_T0/"
-#    folder4 = root+"C2-20191028_test3_25C_s1/"
-#    f0 = root+"C2-20191028_test1_20C_s1"
-#    f1 = root+"C2-20191028_test1_20C_s2"
-#    f2 = root+"C2-20191029_test1_20C_s2" # (39,408,115,1018) left, right, top, bottom
-#    f3 = root+"C2-20191029_test1_20C_s1" # (59,512, 59, 940) left, right, top, bottom
-#    f4 = root+"C2-20191011_test3_20C_s1" # (45, 396, 110, 944)
-#    pair(f0)
-#    pair(f1)
-#    pair(f2, dim = (39,408,115,1018))
-#    pair(f3, dim = (59,512, 59, 940))
-#    pair(f4, dim = (45, 396, 110, 944))
-#    
