@@ -4,17 +4,30 @@ This document describes the steps to track and pair centrosomes from time-lapse 
 
 **The batch processing pipeline tutorial is currently under development. Below we introduce the steps and development of track classification task (with a registered movie), and the detailed registration tutorial and source code can be found in [this repository](https://github.com/gerhold-lab/Semi-automated-GSC-registration/).*
 
-## Usage (of Track Pair Classifier)
+## Usage
 
 #### Materials and Requirements
-- a registered time-lapse tiff movie
+- your germline movie (.tiff)
 - [FIJI](https://imagej.net/Fiji) (with [TrackMate](https://imagej.net/TrackMate) installed)
-- numpy
-- pandas
-- scipy
-- matplotlib
-- skimage
-- pickle
+- python 3.6 ([Anaconda](https://www.anaconda.com/) recommended) with the following packages installed: 
+  - numpy
+  - pandas
+  - scipy
+  - matplotlib
+  - skimage
+  - pickle
+
+### Steps
+
+
+
+
+
+
+
+
+
+
 
 ### 0 Register your movie
 See [this repository](https://github.com/gerhold-lab/Semi-automated-GSC-registration/) for help.
