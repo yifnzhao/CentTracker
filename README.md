@@ -1,5 +1,5 @@
 # CENTRACKER: A trainable software for automated centrosome tracking and pairing in *C. elegans* germline
-This document describes the steps to track and pair centrosomes from time-lapse movies of *C. elegans* germline.
+This document describes the steps to track and pair centrosomes from time-lapse movies of *C. elegans* germline. *Note: the trainable option is currently under developemnt.*
 
 ### Materials and Requirements
 - your germline movie (.tiff)
