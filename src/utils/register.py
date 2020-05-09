@@ -35,7 +35,7 @@ def combine_roi(mat1, mat2):
     return mat
     
 
-def translate(im_in, translation, hi_res = False, compression = 3, padzeros = True):
+def translate(im_in,translation,hi_res=False,compression=3,padzeros = True):
     '''
     input: 
         im_in: input tiff
@@ -49,26 +49,45 @@ def translate(im_in, translation, hi_res = False, compression = 3, padzeros = Tr
     # scalar multiply the translation matrix for high-res
     if hi_res == True:
         translation = numpy.array(translation) * compression
-    
     translation = numpy.array(translation).astype(int)
-    n_frame, n_zstep, y_dim, x_dim = im_in.shape
+    
+    n_channel = 1
+    if len(im_in.shape) == 5:
+        # multiple channel
+        n_frame, n_zstep, n_channel, y_dim, x_dim = im_in.shape
+    else:
+        # single channel
+        n_frame, n_zstep, y_dim, x_dim = im_in.shape
         
     if padzeros == False:       
         # create empty tiff
         im_out = numpy.zeros(im_in.shape)                    
         for t in range(n_frame): 
-            if t%20 == 0:
+            if t%10 == 0:
                 print("Start processing t = " + str(t))
             trans_x, trans_y = translation[t]
             for z in range(n_zstep):
-                for y in range(y_dim):
-                    for x in range(x_dim):
-                        if (x+trans_x < 0) or (y+trans_y < 0):
-                            continue
-                        elif (x+trans_x >= x_dim) or (y+trans_y >= y_dim):
-                            continue
-                        else:
-                            im_out[t][z][y][x] = im_in[t][z][y+trans_y][x+trans_x]
+                if n_channel == 1:
+                    for y in range(y_dim):
+                        for x in range(x_dim):
+                            if (x+trans_x < 0) or (y+trans_y < 0):
+                                continue
+                            elif (x+trans_x >= x_dim) or (y+trans_y >= y_dim):
+                                continue
+                            else:
+                                im_out[t][z][y][x] = im_in[t][z][y+trans_y][x+trans_x]
+                else:
+                    for ch in range(n_channel):
+                        for y in range(y_dim):
+                            for x in range(x_dim):
+                                if (x+trans_x < 0) or (y+trans_y < 0):
+                                    continue
+                                elif (x+trans_x >= x_dim) or (y+trans_y >= y_dim):
+                                    continue
+                                else:
+                                    im_out[t][z][ch][y][x] = im_in[t][z][ch][y+trans_y][x+trans_x]
+
+                    
     else:            
         # search for extrema
         x_low, x_high  = 0, x_dim
@@ -84,23 +103,30 @@ def translate(im_in, translation, hi_res = False, compression = 3, padzeros = Tr
             if x_dim-trans_x > x_high:
                 x_high = x_dim-trans_x
         
-
         x_high, x_low, y_high, y_low = int(x_high), int(x_low), int(y_high), int(y_low)
         x_dim_adj, y_dim_adj = x_high-x_low, y_high-y_low
         #create empty tiff
-        im_out = numpy.zeros((n_frame, n_zstep, y_dim_adj, x_dim_adj))
+        if n_channel == 1:
+            im_out = numpy.zeros((n_frame, n_zstep, y_dim_adj, x_dim_adj))
+        else:
+            im_out = numpy.zeros((n_frame, n_zstep, n_channel, y_dim_adj, x_dim_adj))
         # translate
         for t in range(n_frame):
-            if t%20 == 0:
+            if t%10 == 0:
                 print("Start processing t = " + str(t))
             trans_x, trans_y = translation[t]
             for z in range(n_zstep):
-                for y in range(y_dim):
-                    for x in range(x_dim):
-                        im_out[t][z][y-trans_y-y_low][x-trans_x-x_low] = int(im_in[t][z][y][x])
+                if n_channel==1:
+                    for y in range(y_dim):
+                        for x in range(x_dim):
+                            im_out[t][z][y-trans_y-y_low][x-trans_x-x_low] = int(im_in[t][z][y][x])
+                else:
+                    for ch in range(n_channel):
+                        for y in range(y_dim):
+                            for x in range(x_dim):
+                                im_out[t][z][ch][y-trans_y-y_low][x-trans_x-x_low] = int(im_in[t][z][ch][y][x])
                         
     return im_out
-
 
 
 
@@ -123,7 +149,7 @@ def register(tiff_path, trans_mat, highres = False, compress = 3, pad = True):
 
     
     # register using trans_mat
-    im_out = translate(im_in, trans_mat, hi_res = highres, compression = compress, padzeros = pad)
+    im_out = translate(im_in,trans_mat,hi_res=highres,compression=compress,padzeros=pad)
     im_out = im_out.astype('uint16')
     
     # save registered tiff, no compression
@@ -220,6 +246,4 @@ def findCroppedDim(tiff_path = 'r_germline.tif'):
                     right = x
     return top, bottom, left, right            
 
-
-    
     
