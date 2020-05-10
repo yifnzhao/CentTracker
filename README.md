@@ -21,7 +21,7 @@ This document describes the steps to track and pair centrosomes from time-lapse 
 # declare paths
 originalMovie = 'u_germline.tif'
 originalXML = 'u_germline.xml'
-path = '/Users/yifan/Dropbox/ZYF/dev/GitHub/centracker/data/2018-01-16_GSC_L4_L4440_RNAi/'
+path = '/PATH/TO/YOUR/DATA/FOLDER/'
 
 # initialize centracker
 myTracker = centracker(path,originalXML,originalMovie)
