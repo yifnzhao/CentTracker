@@ -8,28 +8,19 @@ Created on Wed May 22 13:36:10 2019
 import xml.etree.cElementTree as et
 import numpy as np
 import pandas as pd
-import os
 
 def parseSpots(trackmate_xml_path):
-    """Import detected peaks with TrackMate Fiji plugin.
-    Parameters
-    ----------
+    '''
     trackmate_xml_path : str
-        TrackMate XML file path.
-        Add tracks to label
-    """
-
+    parses the spots info from trackmate xml
+    code adaptd from: https://github.com/hadim/pytrackmate
+    '''
     root = et.fromstring(open(trackmate_xml_path).read())
-
     objects = []
-
-
     features = root.find('Model').find('FeatureDeclarations').find('SpotFeatures')
     features = [c.get('feature') for c in features.getchildren()] + ['ID'] + ['name']
-#    features.append('name')
 
     spots = root.find('Model').find('AllSpots')
-    trajs = pd.DataFrame([])
     objects = []
     for frame in spots.findall('SpotsInFrame'):
         for spot in frame.findall('Spot'):
@@ -38,9 +29,9 @@ def parseSpots(trackmate_xml_path):
                 single_object.append(spot.get(label))
             objects.append(single_object)
 
-    trajs = pd.DataFrame(objects, columns=features)
+    spots_df = pd.DataFrame(objects, columns=features)
 
-    return trajs
+    return spots_df
 
 
 def parseTracks(trackmate_xml_path):
@@ -55,7 +46,6 @@ def parseTracks(trackmate_xml_path):
         df2: a pandas dataframe containing specific info per edge
 
     reference: 
-        https://github.com/hadim/pytrackmate/blob/master/pytrackmate/_trackmate.py
         https://imagej.net/TrackMate
     '''
     
@@ -126,20 +116,3 @@ def parseDim(trackmate_xml_path):
     f.close()
     return (X,Y,Z,T)
     
-#------------------------------
-# Example Usage
-#------------------------------
-#if __name__ == "__main__":       
-#    
-#    os.chdir("../data/C2-20191028_test1_20C_s1/")
-#    trackmate_xml_path = "r_germline.xml"
-#    #------parsing xml into 3 pandas dataframes: spots, tracks, edges----------
-#    print("Start to parse the Trackmate XML file. Please wait....")
-#    spots = parseSpots(trackmate_xml_path) 
-#    print("The TrackMate XML file has been parsed into Pandas Dataframes.")
-#    
-#    #------writing the dataframes into csv files-------------------------------
-#    spots.to_csv(path_or_buf=trackmate_xml_path[:-4] + '_spots.csv', index=False)
-#
-#    
-#          

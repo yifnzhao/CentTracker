@@ -170,7 +170,7 @@ def combine(n_csv = 2):
         counter+=1
     return mat
 
-def super_register(folder, n_roi, high_res = True, compress = 3):
+def super_register(folder,tiff_path='u_germline.tiff',n_roi=2,high_res=True,compress=3):
     os.chdir(folder)
     trans_mat = combine(n_csv = n_roi)
     tiff_path = 'u_germline.tif'
@@ -246,4 +246,5 @@ def findCroppedDim(tiff_path = 'r_germline.tif'):
                     right = x
     return top, bottom, left, right            
 
+    
     
