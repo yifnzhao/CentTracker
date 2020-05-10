@@ -9,7 +9,6 @@ import os
 import pandas as pd
 from scipy.spatial import distance
 from statistics import mean, stdev
-import pickle
 import matplotlib.pyplot as plt
 from utils.xmlParser import parseTracks, parseSpots
 from utils.register import findCroppedDim
@@ -152,10 +151,10 @@ class TrackPairer(object):
         return min([toTop, toBottom, toLeft, toRight])
 
         
-    def getAllTracks(self, f):
+    def getAllTracks(self, f, originalMovie):
         # read tiff dim
         if self.DIM == None:
-            self.top, self.bottom, self.left, self.right = findCroppedDim(tiff_path = 'r_germline.tif')
+            self.top, self.bottom, self.left, self.right = findCroppedDim(tiff_path = originalMovie)
         # read from xml all info about tracks
         track_general, track_detail = parseTracks(self.xml_path)
         # populate edge objects
@@ -285,7 +284,7 @@ class TrackPairer(object):
         if plot == True:    
             plt.plot(time, sl)
             plt.title(str(int(id_i)) + "-" + str(int(id_j)))
-            plt.savefig(str(int(id_i)) + "-" + str(int(id_j)) + '.png')
+            plt.savefig('./out/'+str(int(id_i)) + "-" + str(int(id_j)) + '.png')
             plt.show()
         return sl, centers, normals, time
           
@@ -302,11 +301,11 @@ class TrackPairer(object):
             toRight = self.right - x
             myCell.dist2border = min([toTop, toBottom, toLeft, toRight])
 
-    def findNeighbors(self, f):
+    def findNeighbors(self, f, originalMovie):
         # 1. spots bookkeeping
         self.allSpots = self.getAllSpots()
         # 2. tracks and edges bookkeeping
-        self.allTracks = self.getAllTracks(f)
+        self.allTracks = self.getAllTracks(f, originalMovie)
         # 3. find neighbors by crude filters
         print("Total number of tracks: " + str(len(self.allTracks)) )
         for myTrack in self.allTracks.values():            
@@ -384,9 +383,9 @@ class TrackPairer(object):
                 spot2track[spotID] = trackID
         return track2spot, spot2track
         
-    def pred2SpotCSV(self,conversion):
-        pred = pd.read_csv('predictions.csv')
-        spots = parseSpots('r_germline.xml')
+    def pred2SpotCSV(self,conversion,r_xml_path,output_path):
+        pred = pd.read_csv('./out/predictions.csv')
+        spots = parseSpots(r_xml_path)
         allTracks = []
         allPairs = []
         for index, row in pred.iterrows():
@@ -442,8 +441,8 @@ class TrackPairer(object):
         df['POSITION_X_UM'] = df['POSITION_X'].astype('float') * conversion['x']
         df['POSITION_Y_UM'] = df['POSITION_Y'].astype('float') * conversion['y']
         
-        df.to_csv('spots.csv', index=False)
-        print("Number of track pairs found: " + str(len(allPairs)))
+        df.to_csv(output_path, index=False)
+        print("Number of cells found: " + str(len(allPairs)))
         return allSpots, allPairs
 
 def cell2df(cells):
@@ -477,31 +476,30 @@ def cell2df(cells):
     df = pd.DataFrame(myDict)
     return df
 
-def pair(folder,clf,maxdist=11,mindist=4,maxcongdist=4,minoverlap=10,xml_path = 'r_germline.xml',dim=None,raw_tiff_path='u_germline.tif'):
-    os.chdir(folder)
-    f = open("console.txt", "w")
-    print('Processing folder: ' + folder)
-    c = findConv(raw_tiff_path)
+def pair(clf,r_xml_path,originalMovie,output_path,maxdist=11,mindist=4,maxcongdist=4,minoverlap=10,dim=None):
+    f = open("./out/console.txt", "w")
+    print('Pairing tracks in the movie: ' + originalMovie)
+    c = findConv(originalMovie)
     # crude pairer, generate features
     if dim == None:
-        myPairer = TrackPairer(xml_path,c,maxdist=maxdist,mindist=mindist,maxcongdist=maxcongdist,minoverlap=minoverlap)
+        myPairer = TrackPairer(r_xml_path,c,maxdist=maxdist,mindist=mindist,maxcongdist=maxcongdist,minoverlap=minoverlap)
     else: 
-        myPairer = TrackPairer(xml_path,c,DIM = dim,maxdist=maxdist,mindist=mindist,maxcongdist=maxcongdist,minoverlap=minoverlap)
+        myPairer = TrackPairer(r_xml_path,c,DIM = dim,maxdist=maxdist,mindist=mindist,maxcongdist=maxcongdist,minoverlap=minoverlap)
         myPairer.left, myPairer.right, myPairer.top, myPairer.bottom = dim 
     
-    cells = myPairer.findNeighbors(f)
+    cells = myPairer.findNeighbors(f, originalMovie)
     df = cell2df(cells)
-    df.to_csv ('r_features.csv', index = False, header=True)
+    df.to_csv ('./out/features.csv', index = False, header=True)
     print("Potential pairs generated.")
     # generate features panel for ml clf
-    X_df = pd.read_csv('r_features.csv', usecols = range(11))
+    X_df = pd.read_csv('./out/features.csv', usecols = range(11))
     X = X_df.to_numpy()
     # load the model from disk
     # predict
     y_pred = clf.predict(X)
     df['Predicted_Label'] = y_pred
-    df.to_csv ('predictions.csv', index = False, header=True)
+    df.to_csv ('./out/predictions.csv', index = False, header=True)
     print("Predictions generated.")
     f.close()
-    myPairer.pred2SpotCSV(c)
+    myPairer.pred2SpotCSV(c,r_xml_path,output_path)
         

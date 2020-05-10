@@ -6,7 +6,6 @@ Created on Tue Nov 12 19:35:38 2019
 """
 
 import pandas as pd
-import os
 from scipy.spatial import distance
 from scipy.stats import mode
 from skimage.external import tifffile
@@ -19,7 +18,7 @@ import trackpy as tp
 ############################################
 # Implement the batchMeasureIntensity in python
 ############################################
-def batchMeasureIntensity(path,conversion,radius=1,trackmate_xml_path ='u_germline.xml',tiff_path = 'u_germline.tif',output='r_spots_merged.csv'):
+def batchMeasureIntensity(conversion,originalXML,originalMovie,radius=1,output='./out/pairedSpots.csv'):
     """
     Measures the raw integrated intensity of the spots identified.
     
@@ -27,8 +26,7 @@ def batchMeasureIntensity(path,conversion,radius=1,trackmate_xml_path ='u_germli
     
     - The conversion argument is a dictionary of pixel to micon conversion for x, y, z
     """
-    os.chdir(path)
-    spots = parseSpots(trackmate_xml_path) 
+    spots = parseSpots(originalXML) 
     coords = []
     for index, row in spots.iterrows():
         x = float(row['POSITION_X'])/ conversion['x']
@@ -39,10 +37,13 @@ def batchMeasureIntensity(path,conversion,radius=1,trackmate_xml_path ='u_germli
         coords.append(my_coord)
     radius = int(radius / conversion['x'])
     intensities = []
-    with tifffile.TiffFile(tiff_path) as tif:
+    with tifffile.TiffFile(originalMovie) as tif:
         # read tiff
         im_in = tif.asarray() #(t,z,y,x)
-        n_frame, n_zstep, y_dim, x_dim = im_in.shape
+        if len(im_in.shape) == 4:
+            n_frame, n_zstep, y_dim, x_dim = im_in.shape
+        else:
+            n_frame, n_zstep, n_channel, y_dim, x_dim = im_in.shape
         for X,Y,Z,T in coords:
             # calculate the raw integrated intensity
             intensity = 0
@@ -52,7 +53,10 @@ def batchMeasureIntensity(path,conversion,radius=1,trackmate_xml_path ='u_germli
                 for y in range(Y-radius,Y):
                     if y < 0: continue
                     if y >= y_dim: continue
-                    intensity+= im_in[T][Z][y][x]
+                    if len(im_in.shape) == 4:
+                        intensity+= im_in[T][Z][y][x]
+                    else:
+                        intensity+= im_in[T][Z][0][y][x]
             intensities.append(intensity)
     # merge
     spots['POSITION_X'] = spots['POSITION_X'].astype('float')
@@ -118,7 +122,7 @@ class spot(object):
 # Spot pairing
 ############################################
 class SpotPairer(object):
-    def __init__(self,conversion,maxIntensityRatio=0.2,maxDistPair=11,maxDistPairCenter=11):
+    def __init__(self,originalMovie,originalXML,conversion,maxIntensityRatio=0.2,maxDistPair=11,maxDistPairCenter=11):
         """
         Initializing a spot pairer
         
@@ -133,9 +137,9 @@ class SpotPairer(object):
         self.max_ratio = maxIntensityRatio
         self.max_dist = maxDistPair 
         self.max_dist_center = maxDistPairCenter
-        self.spots_merged_df = batchMeasureIntensity('./',conversion,radius=1,
-            trackmate_xml_path ='u_germline.xml',tiff_path = 'u_germline.tif',
-            output='r_spots_merged.csv')
+        self.spots_merged_df = batchMeasureIntensity(conversion,originalXML,
+                                                     originalMovie,radius=1,
+                                                     output='./out/pairedSpots.csv')
         self.true_pairs = {} # dict key is time
         self.trans_mat = None
         
@@ -199,7 +203,7 @@ class SpotPairer(object):
                     n_pair+=1
             if verbose == True: 
                 print('Time = ' + str(t) + ': ' + str(n_pair) + " pairs found.") 
-        with open('spot_pairs.pkl', 'wb') as f:
+        with open('./out/crudeSpotPairs.pkl', 'wb') as f:
             pickle.dump(self.true_pairs, f)
         cell_df = self.cell2df()
         return cell_df
@@ -218,7 +222,7 @@ class SpotPairer(object):
                 cell_list.append(info)
                 
         cell_df = pd.DataFrame(columns=['t','Z_UM','Y_UM','X_UM','ID_I','ID_J','SL_UM','SUMINT'], data=cell_list)
-        cell_df.to_csv("cell.csv")
+        cell_df.to_csv("./out/crudeCellInfo.csv")
         return cell_df
 
     def scatter_int_dist(self):
@@ -248,7 +252,7 @@ def generateTransMat(maxIntensityRatio=0.2,maxDistPair=11,maxDistPairCenter=11,x
     #find the pixel to um conversion
     conversion = findConv(tiff_path)
     #initialize
-    mySpotsPairer = SpotPairer(conversion,maxIntensityRatio=maxIntensityRatio,
+    mySpotsPairer = SpotPairer(tiff_path, xml_path,conversion,maxIntensityRatio=maxIntensityRatio,
                    maxDistPair=maxDistPair,maxDistPairCenter=maxDistPairCenter)
     #find spot pairs
     f = mySpotsPairer.findTruePair(verbose = False)
@@ -302,5 +306,6 @@ def generateTransMat(maxIntensityRatio=0.2,maxDistPair=11,maxDistPairCenter=11,x
             trans_mat.append((last_x,last_y))
         t+=1
     trans_mat = np.array(trans_mat).astype(int)
-        
+    with open('./out/transMat.pkl', 'wb') as f:
+            pickle.dump(trans_mat, f)
     return trans_mat

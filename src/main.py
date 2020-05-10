@@ -8,12 +8,10 @@ Created on Fri May  8 18:04:41 2020
 from model.centracker import centracker
 
 # declare paths
-originalMovie = 'u_germline.tif'
-originalXML = 'u_germline.xml'
-path = '/Users/yifan/Dropbox/ZYF/dev/GitHub/centracker/data/2018-01-16_GSC_L4_L4440_RNAi/'
+path = '/Users/yifan/Dropbox/ZYF/dev/centracker_local/data/trial/'
 
 # initialize centracker
-myTracker = centracker(path,originalXML,originalMovie)
+myTracker = centracker(path)
 
 # generate translation matrix
 transmat = myTracker.generateTransMat(maxIntensityRatio=0.2,maxDistPair=11,
@@ -23,9 +21,12 @@ transmat = myTracker.generateTransMat(maxIntensityRatio=0.2,maxDistPair=11,
 metadata = myTracker.register(transmat,highres=True,compress=1,pad=True)
 
 # suppose after the xml output from TrackMate has been generated...TODO
-registeredXML = 'r_germline.xml'
+while 1:
+    cont = input("Checkpoint: Has the registered movie been processed through TrackMate? (y/n) ")
+    if cont == 'y':
+        break
 # pair the tracks
-myTracker.pair(registeredXML,maxdist=11,maxcongdist=4,minoverlap=10,dim=None)
+myTracker.pair(maxdist=11,maxcongdist=4,minoverlap=10,dim=None)
 print("All done!")
     
         

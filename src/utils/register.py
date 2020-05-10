@@ -130,7 +130,7 @@ def translate(im_in,translation,hi_res=False,compression=3,padzeros = True):
 
 
 
-def register(tiff_path, trans_mat, highres = False, compress = 3, pad = True):
+def register(tiff_path, trans_mat, out_tiff_path, highres = False, compress = 3, pad = True):
     '''
     tiff_path: tiff file name
     trans_mat: translation matrix, can be obtained by roi2mat()
@@ -153,7 +153,7 @@ def register(tiff_path, trans_mat, highres = False, compress = 3, pad = True):
     im_out = im_out.astype('uint16')
     
     # save registered tiff, no compression
-    with tifffile.TiffWriter("r_" + tiff_path, bigtiff = highres) as tif:
+    with tifffile.TiffWriter(out_tiff_path, bigtiff = highres) as tif:
         for i in range(im_out.shape[0]):
             tif.save(im_out[i])
     return tif_tags
@@ -205,45 +205,75 @@ def findConv(tiff_path):
                   'z': z}   
     return conversion
             
-
-        
         
 def findCroppedDim(tiff_path = 'r_germline.tif'):
     with tifffile.TiffFile(tiff_path) as tif:
             # read tiff
             im_in = tif.asarray()
-            n_frame, n_zstep, y_dim, x_dim = im_in.shape
+            if len(im_in.shape) == 4:
+                n_frame, n_zstep, y_dim, x_dim = im_in.shape
+            else: 
+                n_frame, n_zstep, n_channel, y_dim, x_dim = im_in.shape
             top = 0
             bottom = y_dim
             left = 0    
             right = x_dim
-            
-            for t in range(n_frame):
-                # top border
-                y = 0
-                while im_in[t][0][y][int(x_dim/2)] == 0:
-                    y+=1
-                if top < y:
-                    top = y
-                # bottom border
-                y = y_dim - 1
-                while im_in[t][0][y][int(x_dim/2)] == 0:
-                    y-=1
-                if bottom > y:
-                    bottom = y
-                
-                # left border
-                x = 0
-                while im_in[t][0][int(y_dim/2)][x] == 0:
-                    x+=1
-                if left < x:
-                    left = x
-                # right border
-                x = x_dim - 1
-                while im_in[t][0][int(y_dim/2)][x] == 0:
-                    x-=1
-                if right > x:
-                    right = x
+            if len(im_in.shape) == 4:
+                for t in range(n_frame):
+                    # top border
+                    y = 0
+                    while im_in[t][0][y][int(x_dim/2)] == 0:
+                        y+=1
+                    if top < y:
+                        top = y
+                    # bottom border
+                    y = y_dim - 1
+                    while im_in[t][0][y][int(x_dim/2)] == 0:
+                        y-=1
+                    if bottom > y:
+                        bottom = y
+                    
+                    # left border
+                    x = 0
+                    while im_in[t][0][int(y_dim/2)][x] == 0:
+                        x+=1
+                    if left < x:
+                        left = x
+                    # right border
+                    x = x_dim - 1
+                    while im_in[t][0][int(y_dim/2)][x] == 0:
+                        x-=1
+                    if right > x:
+                        right = x
+            else:
+                for t in range(n_frame):
+                    # top border
+                    y = 0
+                    while im_in[t][0][0][y][int(x_dim/2)] == 0:
+                        y+=1
+                    if top < y:
+                        top = y
+                    # bottom border
+                    y = y_dim - 1
+                    while im_in[t][0][0][y][int(x_dim/2)] == 0:
+                        y-=1
+                    if bottom > y:
+                        bottom = y
+                    
+                    # left border
+                    x = 0
+                    while im_in[t][0][0][int(y_dim/2)][x] == 0:
+                        x+=1
+                    if left < x:
+                        left = x
+                    # right border
+                    x = x_dim - 1
+                    while im_in[t][0][0][int(y_dim/2)][x] == 0:
+                        x-=1
+                    if right > x:
+                        right = x
+                         
+                    
     return top, bottom, left, right            
 
     
