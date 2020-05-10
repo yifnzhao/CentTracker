@@ -30,7 +30,7 @@ class centracker(object):
             elif f[-3:] == 'tif':
                 self.originalMovie = f
                 self.registeredMovie = './out/r_'+f
-                self.final_out = './out/cells_'+f[:-4]+'.csv'
+                self.final_out = './out/r_'+f[:-4]+'.csv'
                 originalMovie += 1
                 print('The original movie is found.')
         if originalMovie == 0:
