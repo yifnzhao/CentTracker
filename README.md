@@ -34,7 +34,7 @@ transmat = myTracker.generateTransMat(maxIntensityRatio=0.2,maxDistPair=11,
 ```
 
 
-Alternatively, you can generate a trans_mat using semi-automated method as described [here](https://github.com/gerhold-lab/Semi-automated-GSC-registration/). The Semi-automated-GSC-registration repostisoty contains detailed tutorials and source code.
+Alternatively, you can generate a trans_mat using a semi-automated method as described [here](https://github.com/gerhold-lab/Semi-automated-GSC-registration/). The Semi-automated-GSC-registration repo contains a detailed walk-through and source code.
 
 3. Once you have the translation matrix, to register the movie, run:
 ```
