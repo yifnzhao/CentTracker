@@ -15,7 +15,7 @@ myTracker = centracker(path)
 
 # generate translation matrix
 transmat = myTracker.generateTransMat(maxIntensityRatio=0.2,maxDistPair=11,
-                    maxDistPairCenter=11,method='Mode',searchRange=2.0)
+                    maxDistPairCenter=11,method='Mean',searchRange=2.0)
 
 # register the movie
 metadata = myTracker.register(transmat,highres=True,compress=1,pad=True)
