@@ -4,7 +4,7 @@
 Created on Fri May  8 18:04:41 2020
 @author: yifan
 """
-from model.centracker import centracker
+from model.centracker import centracker_customized
 
 # declare paths
 in_path = '/Users/yifan/Dropbox/ZYF/dev/centracker_local/data/trial/'
