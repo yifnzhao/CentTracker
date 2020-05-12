@@ -24,7 +24,7 @@ myTracker = centracker(path)
 
 2. To generate a translation matrix, run:
 ```
-transmat=myTracker.generateTransMat(maxIntensityRatio=0.2,maxDistPair=11,maxDistPairCenter=11,method='Mode',searchRange=2.0)
+transmat=myTracker.generateTransMat(maxIntensityRatio=0.2,maxDistPair=11,maxDistPairCenter=11,method='Mean',searchRange=2.0)
 ```
 Alternatively, you can generate a trans_mat using a semi-automated method as described [here](https://github.com/gerhold-lab/Semi-automated-GSC-registration/). The Semi-automated-GSC-registration repo contains a detailed walk-through and source code.
 
