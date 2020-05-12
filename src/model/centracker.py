@@ -23,6 +23,7 @@ class centracker(object):
         originalMovie = 0
         for f in filenames:
             if f[-3:] == 'xml':
+                if f[0] == 'r': continue # TODO: this line skips the xmls that start with 'r' to facillate the batch processing (per Reda's request, may need to change this back for other uses. 
                 self.originalXML = f
                 self.registeredXML = './out/r_'+f
                 originalXML += 1
