@@ -5,7 +5,7 @@ This document describes the steps to track and pair centrosomes from time-lapse 
 - your germline movie (.tiff)
 - [FIJI](https://imagej.net/Fiji) (with [TrackMate](https://imagej.net/TrackMate) installed)
 - python 3.6 ([Anaconda](https://www.anaconda.com/) recommended) with the following packages installed: 
-  - [trackpy] (http://soft-matter.github.io/trackpy/dev/installation.html)
+  - [trackpy](http://soft-matter.github.io/trackpy/dev/installation.html)
   - numpy
   - pandas
   - scipy
