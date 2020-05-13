@@ -18,7 +18,7 @@ import trackpy as tp
 ############################################
 # Implement the batchMeasureIntensity in python
 ############################################
-def batchMeasureIntensity(conversion,originalXML,originalMovie,radius=1,output='./out/pairedSpots.csv'):
+def batchMeasureIntensity(conversion,originalXML,originalMovie,radius=1,output='./out/pairedSpots.csv',tbb_ch=1):
     """
     Measures the raw integrated intensity of the spots identified.
     
@@ -42,7 +42,7 @@ def batchMeasureIntensity(conversion,originalXML,originalMovie,radius=1,output='
         im_in = tif.asarray() #(t,z,y,x)
         if len(im_in.shape) == 4:
             n_frame, n_zstep, y_dim, x_dim = im_in.shape
-        else:
+        elif len(im_in.shape) == 5:
             n_frame, n_zstep, n_channel, y_dim, x_dim = im_in.shape
         for X,Y,Z,T in coords:
             # calculate the raw integrated intensity
@@ -56,7 +56,7 @@ def batchMeasureIntensity(conversion,originalXML,originalMovie,radius=1,output='
                     if len(im_in.shape) == 4:
                         intensity+= im_in[T][Z][y][x]
                     else:
-                        intensity+= im_in[T][Z][0][y][x]
+                        intensity+= im_in[T][Z][tbb_ch][y][x]
             intensities.append(intensity)
     # merge
     spots['POSITION_X'] = spots['POSITION_X'].astype('float')
@@ -122,7 +122,7 @@ class spot(object):
 # Spot pairing
 ############################################
 class SpotPairer(object):
-    def __init__(self,originalMovie,originalXML,conversion,maxIntensityRatio=0.2,maxDistPair=11,maxDistPairCenter=11):
+    def __init__(self,originalMovie,originalXML,conversion,maxIntensityRatio=0.2,maxDistPair=11,maxDistPairCenter=11,tbb_ch=1):
         """
         Initializing a spot pairer
         
@@ -139,7 +139,7 @@ class SpotPairer(object):
         self.max_dist_center = maxDistPairCenter
         self.spots_merged_df = batchMeasureIntensity(conversion,originalXML,
                                                      originalMovie,radius=1,
-                                                     output='./out/pairedSpots.csv')
+                                                     output='./out/pairedSpots.csv',tbb_ch=tbb_ch)
         self.true_pairs = {} # dict key is time
         self.trans_mat = None
         
@@ -237,7 +237,7 @@ class SpotPairer(object):
             plt.show()
 
 
-def generateTransMat(maxIntensityRatio=0.2,maxDistPair=11,maxDistPairCenter=11,xml_path='u_germline.xml',tiff_path ='u_germline.tif',method='Mode',searchRange=1.0):
+def generateTransMat(maxIntensityRatio=0.2,maxDistPair=11,maxDistPairCenter=11,xml_path='u_germline.xml',tiff_path ='u_germline.tif',method='Mode',searchRange=1.0,tbb_ch=1):
     """
     Generats a translation matrix from trackmate xml output
     - The definition of maxIntensityRatio, maxDistPair, maxDistPairCenter arguments are the same as in the SpotPairer
@@ -253,7 +253,7 @@ def generateTransMat(maxIntensityRatio=0.2,maxDistPair=11,maxDistPairCenter=11,x
     conversion = findConv(tiff_path)
     #initialize
     mySpotsPairer = SpotPairer(tiff_path, xml_path,conversion,maxIntensityRatio=maxIntensityRatio,
-                   maxDistPair=maxDistPair,maxDistPairCenter=maxDistPairCenter)
+                   maxDistPair=maxDistPair,maxDistPairCenter=maxDistPairCenter,tbb_ch=tbb_ch)
     #find spot pairs
     f = mySpotsPairer.findTruePair(verbose = False)
     f['z'] = f['Z_UM'] / conversion['z']

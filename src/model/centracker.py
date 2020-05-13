@@ -17,13 +17,13 @@ class centracker(object):
         self.clf = pickle.load(open('./model/myModel.sav', 'rb'))
         self.path = path
         self.out_folder = path+'out/'
+        self.tbb_ch = tbb_ch
         os.chdir(self.path)
         filenames = os.listdir()
         originalXML = 0
         originalMovie = 0
         for f in filenames:
             if f[-3:] == 'xml':
-                if f[0] == 'r': continue # TODO: this line skips the xmls that start with 'r' to facillate the batch processing (per Reda's request, may need to change this back for other uses. 
                 self.originalXML = f
                 self.registeredXML = './out/r_'+f
                 originalXML += 1
@@ -50,7 +50,7 @@ class centracker(object):
         
         
     def generateTransMat(self,maxIntensityRatio=0.2,maxDistPair=11,
-                    maxDistPairCenter=11,method='Mode',searchRange=2.0):
+                    maxDistPairCenter=11,method='Mode',searchRange=2.0,tbb_ch=1):
         
         self.trans_mat = generateTransMat(maxIntensityRatio=maxIntensityRatio,
                                      maxDistPair=maxDistPair,
@@ -58,7 +58,8 @@ class centracker(object):
                                      xml_path=self.originalXML,
                                      tiff_path=self.originalMovie,
                                      method=method,
-                                     searchRange=searchRange)
+                                     searchRange=searchRange,
+                                     tbb_ch=tbb_ch)
         return self.trans_mat
 
     def register(self,transmat,highres=True,compress=1,pad=True):
