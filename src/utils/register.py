@@ -7,7 +7,6 @@ Created on Fri Jan 10 14:39:54 2020
 @description: Register a tiff file using user-provided ROI
 """
 import pandas as pd
-import os
 import numpy
 from skimage.external import tifffile
 
@@ -159,22 +158,22 @@ def register(tiff_path, trans_mat, out_tiff_path, highres = False, compress = 3,
     return tif_tags
 
 
-def combine(n_csv = 2):
-    mat = pd.read_csv("1.csv", header = None)
+def combine(csv_path,n_csv = 2):
+    mat = pd.read_csv(csv_path+"1.csv", index_col=0, header=0)
+    mat = mat[['X','Y']]
     mat = roi2mat(mat)
     counter = 2
     while counter<=n_csv:
         nextMat = pd.read_csv(str(counter) + ".csv", header = None)
+        nextMat = nextMat[['X','Y']]
         nextMat = roi2mat(nextMat)
         mat = combine_roi(mat, nextMat)
         counter+=1
     return mat
 
-def super_register(folder,tiff_path='u_germline.tiff',n_roi=2,high_res=True,compress=3):
-    os.chdir(folder)
-    trans_mat = combine(n_csv = n_roi)
-    tiff_path = 'u_germline.tif'
-    metadata = register(tiff_path, trans_mat, highres = high_res, compress = compress)
+def register_w_roi(tiff_path,out_tiff_path, csv_path,n_roi=2,high_res=True,compress=1,pad=True):
+    trans_mat = combine(csv_path, n_csv = n_roi)
+    metadata = register(tiff_path,trans_mat,out_tiff_path,highres = False,compress = 3, pad = True)
     return metadata   
 
 

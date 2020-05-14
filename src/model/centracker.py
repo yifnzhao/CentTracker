@@ -7,7 +7,7 @@ Created on Wed May  6 10:13:00 2020
 """
 from utils.TrackPairer import pair
 from utils.TransMatGenerator import generateTransMat
-from utils.register import register, findFrameRate
+from utils.register import register, register_w_roi, findFrameRate
 import os
 import pickle
 
@@ -72,6 +72,10 @@ class centracker(object):
 
     def register(self,transmat,highres=True,compress=1,pad=True):
         metadata = register(self.originalMovie,transmat,self.registeredMovie,highres=highres,compress=compress,pad=pad)
+        return metadata
+    
+    def register_w_roi(self,csv_path,n_roi,high_res=True,compress=1,pad=True):
+        metadata = register_w_roi(self.originalMovie,self.registeredMovie,csv_path,n_roi=n_roi,high_res=high_res,compress=compress, pad=pad)
         return metadata
     
     def pair(self,maxdist=11,mindist=4,maxcongdist=4,minoverlap=10,dim=None):
