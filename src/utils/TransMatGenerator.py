@@ -18,7 +18,7 @@ import trackpy as tp
 ############################################
 # Implement the batchMeasureIntensity in python
 ############################################
-def batchMeasureIntensity(conversion,originalXML,originalMovie,radius=1,output='./out/pairedSpots.csv',tbb_ch=1):
+def batchMeasureIntensity(conversion,originalXML,originalMovie,out_folder,radius=1,tbb_ch=1):
     """
     Measures the raw integrated intensity of the spots identified.
     
@@ -64,7 +64,7 @@ def batchMeasureIntensity(conversion,originalXML,originalMovie,radius=1,output='
     spots['POSITION_Z'] = spots['POSITION_Z'].astype('float')
     intensity_df = pd.DataFrame({'RawIntDen':intensities})
     df = pd.concat([spots, intensity_df], sort = False, axis = 1)
-    df.to_csv(output)
+    df.to_csv(out_folder+'/.temp/intensity.csv')
     return df
 ############################################
 # find the pixel to um conversion using the original tiff
@@ -122,7 +122,7 @@ class spot(object):
 # Spot pairing
 ############################################
 class SpotPairer(object):
-    def __init__(self,originalMovie,originalXML,conversion,maxIntensityRatio=0.2,maxDistPair=11,maxDistPairCenter=11,tbb_ch=1):
+    def __init__(self,originalMovie,originalXML,out_folder,conversion,maxIntensityRatio=0.2,maxDistPair=11,maxDistPairCenter=11,tbb_ch=1):
         """
         Initializing a spot pairer
         
@@ -137,11 +137,13 @@ class SpotPairer(object):
         self.max_ratio = maxIntensityRatio
         self.max_dist = maxDistPair 
         self.max_dist_center = maxDistPairCenter
+        self.out_folder = out_folder
         self.spots_merged_df = batchMeasureIntensity(conversion,originalXML,
-                                                     originalMovie,radius=1,
-                                                     output='./out/pairedSpots.csv',tbb_ch=tbb_ch)
+                                                     originalMovie, self.out_folder,radius=1,
+                                                     tbb_ch=tbb_ch)
         self.true_pairs = {} # dict key is time
         self.trans_mat = None
+        
         
     def findTruePair(self, verbose = True):
         
@@ -203,7 +205,7 @@ class SpotPairer(object):
                     n_pair+=1
             if verbose == True: 
                 print('Time = ' + str(t) + ': ' + str(n_pair) + " pairs found.") 
-        with open('./out/crudeSpotPairs.pkl', 'wb') as f:
+        with open(self.out_folder+'/.temp/crudeSpotPairs.pkl', 'wb') as f:
             pickle.dump(self.true_pairs, f)
         cell_df = self.cell2df()
         return cell_df
@@ -236,7 +238,7 @@ class SpotPairer(object):
                 cell_list.append(info)
                  
         cell_df = pd.DataFrame(columns=['t','Z_UM','Y_UM','X_UM','ID_I','ID_J','SL_UM','SUMINT'], data=cell_list)
-        cell_df.to_csv("./out/crudeCellInfo.csv")
+        cell_df.to_csv(self.out_folder+'/.temp/crudeCellInfo.csv')
         return cell_df
 
     def scatter_int_dist(self):
@@ -251,7 +253,7 @@ class SpotPairer(object):
             plt.show()
 
 
-def generateTransMat(maxIntensityRatio=0.2,maxDistPair=11,maxDistPairCenter=11,xml_path='u_germline.xml',tiff_path ='u_germline.tif',method='Mode',searchRange=1.0,tbb_ch=1):
+def generateTransMat(out_folder,maxIntensityRatio=0.2,maxDistPair=11,maxDistPairCenter=11,xml_path='u_germline.xml',tiff_path ='u_germline.tif',method='Mode',searchRange=1.0,tbb_ch=1):
     """
     Generats a translation matrix from trackmate xml output
     - The definition of maxIntensityRatio, maxDistPair, maxDistPairCenter arguments are the same as in the SpotPairer
@@ -266,7 +268,7 @@ def generateTransMat(maxIntensityRatio=0.2,maxDistPair=11,maxDistPairCenter=11,x
     #find the pixel to um conversion
     conversion = findConv(tiff_path)
     #initialize
-    mySpotsPairer = SpotPairer(tiff_path, xml_path,conversion,maxIntensityRatio=maxIntensityRatio,
+    mySpotsPairer = SpotPairer(tiff_path,xml_path,out_folder,conversion,maxIntensityRatio=maxIntensityRatio,
                    maxDistPair=maxDistPair,maxDistPairCenter=maxDistPairCenter,tbb_ch=tbb_ch)
     #find spot pairs
     f = mySpotsPairer.findTruePair(verbose = False)
@@ -320,6 +322,6 @@ def generateTransMat(maxIntensityRatio=0.2,maxDistPair=11,maxDistPairCenter=11,x
             trans_mat.append((last_x,last_y))
         t+=1
     trans_mat = np.array(trans_mat).astype(int)
-    with open('./out/transMat.pkl', 'wb') as f:
+    with open(out_folder+'/.temp/transMat.pkl', 'wb') as f:
             pickle.dump(trans_mat, f)
     return trans_mat

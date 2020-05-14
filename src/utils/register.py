@@ -204,7 +204,23 @@ def findConv(tiff_path):
                   'y': y_resolution[1]/y_resolution[0],
                   'z': z}   
     return conversion
-            
+
+# find framerate using the original tiff
+def findFrameRate(tiff_path):
+    rate = 1
+    with tifffile.TiffFile(tiff_path) as tif:
+        # read metadata as tif_tags (dict)
+        tif_tags = tif.pages[0].tags
+        for t in tif_tags.values():
+            if t.name == 'image_description':
+                description = t.value.split()
+    for e in description:
+        if e.startswith(b'finterval='):
+            rate = float(e[10:])
+    return rate
+
+
+         
         
 def findCroppedDim(tiff_path = 'r_germline.tif'):
     with tifffile.TiffFile(tiff_path) as tif:

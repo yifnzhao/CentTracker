@@ -5,7 +5,6 @@ Created on Fri Feb 21 19:29:46 2020
 @filename: track_pairer
 @author: yifan
 """
-import os
 import pandas as pd
 from scipy.spatial import distance
 from statistics import mean, stdev
@@ -225,7 +224,7 @@ class TrackPairer(object):
         return mean(diam), mean(contrast), mean(maxInt)
         
     
-    def findDist(self, id_i, id_j, plot = False):
+    def findDist(self, id_i, id_j):
         '''
         finds the distance between two tracks over time
         input: id_i and id_j are track id's
@@ -281,11 +280,6 @@ class TrackPairer(object):
             normals['y'].append(n_normal[1])
             normals['z'].append(n_normal[2])
             t+=1
-        if plot == True:    
-            plt.plot(time, sl)
-            plt.title(str(int(id_i)) + "-" + str(int(id_j)))
-            plt.savefig('./out/'+str(int(id_i)) + "-" + str(int(id_j)) + '.png')
-            plt.show()
         return sl, centers, normals, time
           
     def cell_dist2border(self):
@@ -383,8 +377,8 @@ class TrackPairer(object):
                 spot2track[spotID] = trackID
         return track2spot, spot2track
         
-    def pred2SpotCSV(self,conversion,r_xml_path,output_path):
-        pred = pd.read_csv('./out/predictions.csv')
+    def pred2SpotCSV(self,conversion,r_xml_path,out_folder,out_name,framerate=1):
+        pred = pd.read_csv(out_folder+'/.temp/predictions.csv')
         spots = parseSpots(r_xml_path)
         allTracks = []
         allPairs = []
@@ -437,11 +431,12 @@ class TrackPairer(object):
                  "TOTAL_INTENSITY", "STANDARD_DEVIATION",
                  "ESTIMATED_DIAMETER", "ESTIMATED_DIAMETER", "SNR"]]
         
-        df['POSITION_Z_UM'] = df['POSITION_Z'].astype('float') * conversion['z']
-        df['POSITION_X_UM'] = df['POSITION_X'].astype('float') * conversion['x']
-        df['POSITION_Y_UM'] = df['POSITION_Y'].astype('float') * conversion['y']
+        df['POSITION_Z'] = df['POSITION_Z'].astype('float') * conversion['z']
+        df['POSITION_X'] = df['POSITION_X'].astype('float') * conversion['x']
+        df['POSITION_Y'] = df['POSITION_Y'].astype('float') * conversion['y']
+        df['POSITION_T'] = df['POSITION_T'].astype('float') * framerate 
         
-        df.to_csv(output_path, index=False)
+        df.to_csv(out_name, index=False)
         print("Number of cells found: " + str(len(allPairs)))
         return allSpots, allPairs
 
@@ -476,8 +471,8 @@ def cell2df(cells):
     df = pd.DataFrame(myDict)
     return df
 
-def pair(clf,r_xml_path,originalMovie,output_path,maxdist=11,mindist=4,maxcongdist=4,minoverlap=10,dim=None):
-    f = open("./out/console.txt", "w")
+def pair(clf,r_xml_path,originalMovie,out_folder,final_out,framerate=1,maxdist=11,mindist=4,maxcongdist=4,minoverlap=10,dim=None):
+    f = open(out_folder+'.temp/console.txt', 'w')
     print('Pairing tracks in the movie: ' + originalMovie)
     c = findConv(originalMovie)
     # crude pairer, generate features
@@ -489,17 +484,17 @@ def pair(clf,r_xml_path,originalMovie,output_path,maxdist=11,mindist=4,maxcongdi
     
     cells = myPairer.findNeighbors(f, originalMovie)
     df = cell2df(cells)
-    df.to_csv ('./out/features.csv', index = False, header=True)
+    df.to_csv (out_folder+'/.temp/features.csv', index = False, header=True)
     print("Potential pairs generated.")
     # generate features panel for ml clf
-    X_df = pd.read_csv('./out/features.csv', usecols = range(11))
+    X_df = pd.read_csv(out_folder+'/.temp/features.csv', usecols = range(11))
     X = X_df.to_numpy()
     # load the model from disk
     # predict
     y_pred = clf.predict(X)
     df['Predicted_Label'] = y_pred
-    df.to_csv ('./out/predictions.csv', index = False, header=True)
+    df.to_csv (out_folder+'/.temp/predictions.csv', index = False, header=True)
     print("Predictions generated.")
     f.close()
-    myPairer.pred2SpotCSV(c,r_xml_path,output_path)
+    myPairer.pred2SpotCSV(c,r_xml_path,out_folder,final_out,framerate=framerate)
         
