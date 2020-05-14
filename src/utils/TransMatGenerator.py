@@ -210,6 +210,7 @@ class SpotPairer(object):
                     
     def cell2df(self):
         cell_list = []
+        unique = {}
         for time, spots_t in self.true_pairs.items():
             for s in spots_t:
                 x,y,z = s.currLoc
@@ -217,10 +218,23 @@ class SpotPairer(object):
                 sumInt = s.sumInt
                 id_i = s.id
                 id_j = s.Nbr.id
+                if id_i in unique:
+                    if id_j in unique[id_i]:
+                        continue
+                    unique[id_i].append(id_j)
+                else: 
+                    unique[id_i] = [id_j]
+                if id_j in unique:
+                    if id_i in unique[id_j]:
+                        continue
+                    unique[id_j].append(id_i)
+                else:
+                    unique[id_j] = [id_i]
+                    
                 sl = s.dist #spindle length
                 info = [t,z,y,x,id_i, id_j, sl, sumInt]
                 cell_list.append(info)
-                
+                 
         cell_df = pd.DataFrame(columns=['t','Z_UM','Y_UM','X_UM','ID_I','ID_J','SL_UM','SUMINT'], data=cell_list)
         cell_df.to_csv("./out/crudeCellInfo.csv")
         return cell_df

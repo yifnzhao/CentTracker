@@ -17,7 +17,6 @@ class centracker(object):
         self.clf = pickle.load(open('./model/myModel.sav', 'rb'))
         self.path = path
         self.out_folder = path+'out/'
-        self.tbb_ch = tbb_ch
         os.chdir(self.path)
         filenames = os.listdir()
         originalXML = 0
