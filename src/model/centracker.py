@@ -12,9 +12,9 @@ import os
 import pickle
 
 class centracker(object):
-    def __init__(self,in_folder, out_folder):
+    def __init__(self,in_folder, out_folder, model):
         # import model
-        self.clf = pickle.load(open('./model/myModel.sav', 'rb'))
+        self.clf = pickle.load(open(model, 'rb'))
         self.path = in_folder
         self.out_folder = out_folder
         self.temp_folder = out_folder+'/.temp/'
