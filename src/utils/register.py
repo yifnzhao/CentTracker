@@ -129,7 +129,7 @@ def translate(im_in,translation,hi_res=False,compression=3,padzeros = True):
 
 
 
-def register(tiff_path, trans_mat, out_tiff_path, highres = False, compress = 3, pad = True):
+def register(tiff_path, trans_mat, out_tiff_path, highres = True, compress = 1, pad = True):
     '''
     tiff_path: tiff file name
     trans_mat: translation matrix, can be obtained by roi2mat()
