@@ -82,6 +82,13 @@ metadata = register_w_roi(hr_tiff,hr_output, csv_path,n_roi=2,high_res=True,comp
 2. You can now visualize your registered movie with surrounding borders resulting from the registration. To improve the next steps, draw a rectangle around the border of your movie reducing the best possible the surrounding extra borders then go to Image>>Crop to crop it.
 3. Go to Plugins>>Tracking>>TrackMate to open TrackMate and proceed following the TrackMate tutorial (https://imagej.net/Getting_started_with_TrackMate) to track centrosomes and generate a .xml .
 
+### Batch mode ( option)
+To crop your movie and generate a .xml in batch mode, run the macro FixHyperstracks.ijm in fiji. 
+1. First window will ask you for the folder path where your registered movies are saved.
+2. Windows will then promp to ask you for the number of channels, slices and frames of your original movie.
+3. A window will then ask you to draw a rectangle around the border of your movie reducing the best possible the surrounding extra borders then click on Done.
+4. Trackmate window will open, then follow the TrackMate tutorial (https://imagej.net/Getting_started_with_TrackMate) to track centrosomes and generate a .xml.
+5. Click on done when done generating the xml and all windows will close and the next registered movie in the folder will open.
 
 #### Now, what function does the whole registration thing?
 1. ```roi2mat(roi_df)``` reads your x-y coodinate input (i.e. the ROI csv) and returns a translation matrix.
