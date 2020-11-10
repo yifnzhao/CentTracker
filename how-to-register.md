@@ -80,7 +80,7 @@ metadata = register_w_roi(hr_tiff,hr_output, csv_path,n_roi=2,high_res=True,comp
 ### 4 Crop your movie and Generate a .xml 
 1. Open the registered movie. Go to Image>>Hyperstacks>>stack to hyperstack. In the popup window, enter the number of Slices and Frames of your original movie.
 2. You can now visualize your registered movie with surrounding borders resulting from the registration. To improve the next steps, draw a rectangle around the border of your movie reducing the best possible the surrounding extra borders then go to Image>>Crop to crop it.
-3. Go to Plugins>>Tracking>>TrackMate to open TrackMate and proceed following the TrackMate tutorial (https://imagej.net/Getting_started_with_TrackMate)
+3. Go to Plugins>>Tracking>>TrackMate to open TrackMate and proceed following the TrackMate tutorial (https://imagej.net/Getting_started_with_TrackMate) to track centrosomes and generate a .xml .
 
 
 #### Now, what function does the whole registration thing?
