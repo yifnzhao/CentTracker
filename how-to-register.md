@@ -77,6 +77,12 @@ metadata = register_w_roi(hr_tiff,hr_output, csv_path,n_roi=2,high_res=True,comp
 2. Open the registered low-res tiff. It is now a 2D stack. Go to Image>>Hyperstacks>>stack to hyperstack. In the popup window, enter the number of Slices and Frames of your original movie.
 3. If the movie doesn't look alright, check the time points that looks strange. You can either directly approximate and fix the number in the csv file, or redo the ROI step if necessary. If the low-res movie looks alright, you can use the same matrix to register the high-res movie.
 
+### 4 Crop your movie and Generate a .xml 
+1. Open the registered movie. Go to Image>>Hyperstacks>>stack to hyperstack. In the popup window, enter the number of Slices and Frames of your original movie.
+2. You can now visualize your registered movie with surrounding borders resulting from the registration. To improve the next steps, draw a rectangle around the border of your movie reducing the best possible the surrounding extra borders then go to Image>>Crop to crop it.
+3. Go to Plugins>>Tracking>>TrackMate to open TrackMate and proceed following the TrackMate tutorial (https://imagej.net/Getting_started_with_TrackMate)
+
+
 #### Now, what function does the whole registration thing?
 1. ```roi2mat(roi_df)``` reads your x-y coodinate input (i.e. the ROI csv) and returns a translation matrix.
 2. ```combine_roi(mat1, mat2)``` is optional -- it combines the translation matrices in cases where you have multiple csv files for distinct centrosome pairs (see Part 2 Important Notes).
@@ -89,3 +95,5 @@ Note: a good way to check is to do a double z-projection (the second projection 
 
 ![Figure 4A](https://github.com/yifnzhao/Semi-automated-GSC-registration/blob/master/figures/Figure%204A.png)
 ![Figure 4B](https://github.com/yifnzhao/Semi-automated-GSC-registration/blob/master/figures/Figure%204B.png)
+
+
