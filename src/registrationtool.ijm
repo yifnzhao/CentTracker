@@ -1,7 +1,6 @@
 
 
 #@ File (label = "Input directory", style = "directory") input
-#@ File (label = "Output directory", style = "directory") output
 #@ String (label = "File suffix", value = ".tif") suffix
 
 
@@ -17,13 +16,13 @@ function processFolder(input) {
 		if(File.isDirectory(input + File.separator + list[i]))
 			processFolder(input + File.separator + list[i]);
 		if(endsWith(list[i], suffix))
-			processFile(input, output, list[i]);
+			processFile(input, list[i]);
 			row++;	
 	}
 }
 
 
-function processFile(input, output, file) {
+function processFile(input, file) {
 
 	    print("Processing: " + input + File.separator + file);
 	    open(input + File.separator + file);
