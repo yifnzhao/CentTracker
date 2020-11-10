@@ -5,7 +5,6 @@
 
 
 processFolder(input);
-saveAs("Results", output + "True" +".csv");	
 	
 // find files with correct suffix
 function processFolder(input) {
@@ -34,8 +33,6 @@ function processFile(input, file) {
 		run("ROI Manager...");
 		//setTool("line");
 		waitForUser("generate CSVs then click on OK");
-		run("Close");
-		run("Close");
-		run("Close");
+		run("Close All");
 		run("Collect Garbage");
 }
