@@ -30,6 +30,13 @@ times to identify such a pair. But it gets very easy with a little practice.
 ![Figure 2](https://github.com/yifnzhao/Semi-automated-GSC-registration/blob/master/figures/Figure%202.png)
 ![Figure 3](https://github.com/yifnzhao/Semi-automated-GSC-registration/blob/master/figures/Figure%203.png)
 
+### Batch mode ( option)
+To register your movies in batch mode, run the macro registrationtool.ijm in fiji. 
+1.First window will ask you for the folder path where your movies are saved.
+2.First movie will open and a second window will ask after spliting channels to choose the channel window of centrosomes.
+3.A third window will ask you to generate CSVs and Roi manager will open, before to click on OK, follow steps of (### 2 ROI (The only manual step)) starting from point 3.
+4.When done, click on OK and all windows will close and next movie will open, repeat step 2 and 3.
+
 
 ### 3 Generate the transformation matrix
 1. Now you have your ROI csv and low-res tiff ready. With your favorite python IDE open, run:
