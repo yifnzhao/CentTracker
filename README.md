@@ -1,4 +1,4 @@
-# CENTRACKER
+# CentTracker
 A trainable, machine learning-based tool for large-scale analyses of intravital imaging of C. elegans germline stem cell mitosis.
 
 - Module 1 and 2: For step-to-step movie registration instructions, read the doc [here](https://github.com/yifnzhao/CENTRACKER/blob/master/how-to-register.md).
