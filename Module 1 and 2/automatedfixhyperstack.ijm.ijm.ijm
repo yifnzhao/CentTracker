@@ -22,19 +22,22 @@ function processFolder(input) {
 
 
 function processFile(input, output, file) {
-	
+		discardReg=substring(file, 0, 2);
+	    if(discardReg!="r_"){
 	    print("Processing: " + file);
 	    open(input + File.separator + file);
 		getVoxelSize(xy, Pxheight, z, unit);
 		Stack.getDimensions(wi, he, ch, sl, fr);
 		Interval=Stack.getFrameInterval();
 		run("Close All");
-		open(output +File.separator+ File.getNameWithoutExtension(file)+File.separator+"r_"+file);
+		open(input+File.separator+"r_"+file);
 		setVoxelSize(xy, Pxheight, z, unit);
 		run("Stack to Hyperstack...", "order=xyczt(default) channels=ch slices=sl frames=fr display=Color");
 		Stack.setFrameInterval(Interval);
 		//run("Channels Tool...");
+		if(ch>1){
 		Stack.setDisplayMode("composite");
+		}
 		//run("Brightness/Contrast...");
 		Stack.setPosition(1,25,1);
 		run("Enhance Contrast", "saturated=0.35");
@@ -46,7 +49,8 @@ function processFile(input, output, file) {
 		run("Crop");
 		run("Save");
 		run("TrackMate");
-		waitForUser("generate .xml","Done");
+		waitForUser("generate a .xml using Trackmate");
 		run("Close All");
 		run("Collect Garbage");
+	    }
 }

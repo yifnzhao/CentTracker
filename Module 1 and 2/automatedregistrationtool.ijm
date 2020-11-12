@@ -25,7 +25,10 @@ function processFile(input, file) {
 	    open(input + File.separator + file);
 	    csvdir= input + File.separator +"/roi/";
 		File.makeDirectory(csvdir);
+		Stack.getDimensions(wi, he, ch, sl, fr);
+	    if (ch>1){
 	    run("Split Channels");
+	    }
 	    waitForUser("click on centrosomes channel then click on OK");
 		run("Z Project...", "projection=[Max Intensity] all");
 		//run("Brightness/Contrast...");
@@ -47,7 +50,7 @@ function processFile(input, file) {
 			saveAs("Results", csvdir+File.separator+b+".csv");
 			run("Close");
 			roiManager("Delete");
-			getBoolean("track an additional cell ?");}
+			}
 		run("Close All");
 		run("Collect Garbage");
 }
