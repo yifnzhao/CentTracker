@@ -39,7 +39,8 @@ $ cd CentTracker-master
   - Enter ```conda -V``` into the terminal command line and press enter. If conda is installed you should see something like the following:
 ```
 $ conda -V
-conda 4.9.0```
+conda 4.9.0
+```
 2. Create and activate a virtual environment, by entering
 ```
 $ conda create -n "mitosis" python=3.8.5
