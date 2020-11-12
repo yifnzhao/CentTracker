@@ -160,47 +160,6 @@ def parseDim(trackmate_xml_path):
     f.close()
     return (X,Y,Z,T)
 
-# find the pixel to um conversion using the original tiff
-def findConv(tiff_path):
-    with tifffile.TiffFile(tiff_path) as tif:
-        # read metadata as tif_tags (dict)
-        tif_tags = tif.pages[0].tags
-        found = 0
-        for t in tif_tags.values():
-            if t.name == 'x_resolution':
-                x_resolution = t.value
-                found+=1
-            elif t.name == 'y_resolution':
-                y_resolution = t.value
-                found+=1
-            elif t.name == 'image_description':
-                description = t.value.split()
-                found+=1
-            if found == 3:
-                break
-    for e in description:
-        if e[:8] == b'spacing=':
-            z = float(e[8:])
-            break
-    conversion = {'x': x_resolution[1]/x_resolution[0],
-                  'y': y_resolution[1]/y_resolution[0],
-                  'z': z}
-    return conversion
-
-
-# find framerate using the original tiff
-def findFrameRate(tiff_path):
-    rate = 1
-    with tifffile.TiffFile(tiff_path) as tif:
-        # read metadata as tif_tags (dict)
-        tif_tags = tif.pages[0].tags
-        for t in tif_tags.values():
-            if t.name == 'image_description':
-                description = t.value.split()
-    for e in description:
-        if e.startswith(b'finterval='):
-            rate = float(e[10:])
-    return rate
 
 
 ################################################
@@ -292,6 +251,19 @@ def combine(csv_path,n_csv = 2):
         counter+=1
     return mat
 
+def register_movie(root, movie_name,pad=True):
+    tiff = root+movie_name+'/'+movie_name+'.tif'
+    r_tiff =root+movie_name+'/r_'+movie_name+'.tif'
+    csv_path = root+movie_name+'/roi/'
+    import os
+    (_,_,filenames) = next(os.walk(csv_path))
+    n_roi = len(filenames)
+    print("Number of ROI found: ", n_roi)
+    print("Start registration...")
+    register_w_roi(tiff,r_tiff,csv_path,n_roi=n_roi,pad=True)
+    print("Registration of {} was successful. Saved in {} .".format(movie_name, r_tiff))
+    return
+    
 def register_w_roi(tiff_path,out_tiff_path, csv_path,n_roi=2,high_res=True,compress=1,pad=True):
     trans_mat = combine(csv_path, n_csv = n_roi)
     metadata = register(tiff_path,trans_mat,out_tiff_path,highres=high_res,compress=compress, pad=pad)
@@ -515,14 +487,12 @@ class track(object):
 # Pairer object
 ################################################
 class TrackPairer(object):
-    def __init__(self,xml,conversion,DIM=None,maxdist=11,mindist=4,maxcongdist=4,minoverlap=10):
+    def __init__(self,xml,DIM=None,maxdist=11,mindist=4,maxcongdist=4,minoverlap=10):
         """
         Initialzing a pairer object
         
         - The xml argument is path of the TrackMate xml input, as a string
-        
-        - The conversion argument is a dictionary of pixel to micon conversion for x, y, z
-        
+                
         - The DIM argument is an option for user to input the dimension (width,y=height) of the movie, optional
         
         - The maxdist argument is a distance threshold of how far away two paired centrosomes can be at any time point
@@ -536,9 +506,9 @@ class TrackPairer(object):
         # store the provided variables
         self.xml_path = xml
         self.min_overlap = minoverlap
-        self.max_dist = maxdist/conversion['x']
-        self.min_dist = mindist/conversion['x']
-        self.maxcongdist = maxcongdist/conversion['x']
+        self.max_dist = maxdist
+        self.min_dist = mindist
+        self.maxcongdist = maxcongdist
         self.DIM = DIM
         
         # create dynamic variables
@@ -796,7 +766,7 @@ class TrackPairer(object):
                 spot2track[spotID] = trackID
         return track2spot, spot2track
         
-    def pred2SpotCSV(self,conversion,r_xml_path,out_folder,out_name,framerate=1):
+    def pred2SpotCSV(self,r_xml_path,out_folder,out_name):
         pred = pd.read_csv(out_folder+'/predictions.csv')
         spots = parseSpots(r_xml_path)
         allTracks = []
@@ -853,10 +823,10 @@ class TrackPairer(object):
                  "TOTAL_INTENSITY", "STANDARD_DEVIATION",
                  "ESTIMATED_DIAMETER", "ESTIMATED_DIAMETER", "SNR"]]
         
-        df['POSITION_Z'] = df['POSITION_Z'].astype('float') * conversion['z']
-        df['POSITION_X'] = df['POSITION_X'].astype('float') * conversion['x']
-        df['POSITION_Y'] = df['POSITION_Y'].astype('float') * conversion['y']
-        df['POSITION_T'] = df['POSITION_T'].astype('float') * framerate 
+        df['POSITION_Z'] = df['POSITION_Z'].astype('float') 
+        df['POSITION_X'] = df['POSITION_X'].astype('float') 
+        df['POSITION_Y'] = df['POSITION_Y'].astype('float') 
+        df['POSITION_T'] = df['POSITION_T'].astype('float')  
         
         df.to_csv(out_name, index=False)
         print("Number of cells found: " + str(len(allPairs)))
@@ -903,15 +873,14 @@ def cell2df(cells):
 
     return df
 
-def pair(clf,r_xml_path,originalMovie,out_folder,csv_path,framerate=1,maxdist=11,mindist=4,maxcongdist=4,minoverlap=10,dim=None):
+def pair(clf,r_xml_path,originalMovie,out_folder,csv_path,maxdist=11,mindist=4,maxcongdist=4,minoverlap=10,dim=None):
     f = open(out_folder+'/console.txt', 'w')
     print('Pairing tracks in the movie: ' + originalMovie)
-    c = findConv(originalMovie)
     # crude pairer, generate features
     if dim == None:
-        myPairer = TrackPairer(r_xml_path,c,maxdist=maxdist,mindist=mindist,maxcongdist=maxcongdist,minoverlap=minoverlap)
+        myPairer = TrackPairer(r_xml_path,maxdist=maxdist,mindist=mindist,maxcongdist=maxcongdist,minoverlap=minoverlap)
     else: 
-        myPairer = TrackPairer(r_xml_path,c,DIM = dim,maxdist=maxdist,mindist=mindist,maxcongdist=maxcongdist,minoverlap=minoverlap)
+        myPairer = TrackPairer(r_xml_path,DIM = dim,maxdist=maxdist,mindist=mindist,maxcongdist=maxcongdist,minoverlap=minoverlap)
         myPairer.left, myPairer.right, myPairer.top, myPairer.bottom = dim 
     
     cells = myPairer.findNeighbors(f, originalMovie)
@@ -928,10 +897,10 @@ def pair(clf,r_xml_path,originalMovie,out_folder,csv_path,framerate=1,maxdist=11
     df.to_csv (out_folder+'/predictions.csv', index = False, header=True)
     print("Predictions generated.")
     f.close()
-    myPairer.pred2SpotCSV(c,r_xml_path,out_folder,csv_path,framerate=framerate)
+    myPairer.pred2SpotCSV(r_xml_path,out_folder,csv_path)
         
        
-def features2spots(features,r_xml_path,movie,framerate,conversion,output_csv_path):
+def features2spots(features,r_xml_path,movie,output_csv_path):
     # pred to spots
     spots_df = parseSpots(r_xml_path)
     spots = getAllSpots(r_xml_path)
@@ -991,10 +960,11 @@ def features2spots(features,r_xml_path,movie,framerate,conversion,output_csv_pat
              "TOTAL_INTENSITY", "STANDARD_DEVIATION",
              "ESTIMATED_DIAMETER", "ESTIMATED_DIAMETER", "SNR"]]
     
-    df['POSITION_Z'] = df['POSITION_Z'].astype('float') * conversion['z']
-    df['POSITION_X'] = df['POSITION_X'].astype('float') * conversion['x']
-    df['POSITION_Y'] = df['POSITION_Y'].astype('float') * conversion['y']
-    df['POSITION_T'] = df['POSITION_T'].astype('float') * framerate 
+    df['POSITION_Z'] = df['POSITION_Z'].astype('float')
+    df['POSITION_X'] = df['POSITION_X'].astype('float') 
+    df['POSITION_Y'] = df['POSITION_Y'].astype('float') 
+    df['POSITION_T'] = df['POSITION_T'].astype('float') 
+    
     
     df.to_csv('{}_spots_all.csv'.format(movie), index=False)
     print("Number of cells: " + str(len(allPairs)))

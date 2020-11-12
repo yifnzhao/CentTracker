@@ -72,18 +72,25 @@ Detailed instructions can be found [here](https://imagej.net/Fiji). The version 
 - TODO: REDA
 
 #### 2. Register
+- To open a jupyter notebook, simply enter the following in the terminal
+```
+$ conda activate mitosis
+$ jupyter notebook
+```
+which should open in your default web browser.
+
 - For single movie, a jupyter notebook with detailed instructions can be found [here](/src/singlemovie.ipynb).
 - For batch mode, a jupyter notebook with detailed instructions can be found [here](/src/batchmode.ipynb).
 
 <a name="tracking"></a>
 ### Module 2: Tracking
-- TrackMate is our recommended software. Detailed installation and usage instructions can be found [here](https://imagej.net/TrackMate)
+- TrackMate is our recommended software. Detailed installation and usage instructions can be found [here](https://imagej.net/TrackMate).
 - TODO: REDA (maybe you can describe the trackmate parameters that you used a little bit?)
 
 <a name="tpc"></a>
 ### Module 3: Track pair classification
-- For single movie, a jupyter notebook with detailed instructions can be found [here](/src/singlemovie.ipynb).
-- For batch mode, a jupyter notebook with detailed instructions can be found [here](/src/batchmode.ipynb).
+- For single movie, a jupyter notebook with detailed instructions can be found [here](/notebooks/singlemovie.ipynb).
+- For batch mode, a jupyter notebook with detailed instructions can be found [here](/notebooks/batchmode.ipynb).
 
 
 <a name="scoring"></a>
