@@ -56,7 +56,7 @@ After you have ```cd```'d to the CentTracker foler, simply enter
 TODO:REDA (if there is installation/requirments for matlab scripts that you use.)
 
 ### Install Fiji
-Detailed instructions can be found [here](https://imagej.net/Fiji). The version used for our experiments is [REDA: could you fill this in?].
+Detailed instructions can be found [here](https://imagej.net/Fiji). The version used for our experiments is 1.52v.
 
 
 
