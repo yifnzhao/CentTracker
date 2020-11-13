@@ -19,7 +19,7 @@ folder = uigetdir;
 fileList = getAllFiles(folder);
 
 % exclude none relevant CSVs or .txt
-excluded = {'crudeCellInfo','features','pairedSpots','predictions','console','coords','cellIDs'};
+excluded = {'crudeCellInfo','features','pairedSpots','predictions','console','coords','cellIDs','True'};
 for i=1:1:length(excluded)
     booo = [];
     booo = strfind (fileList,excluded(1,i));
@@ -29,7 +29,8 @@ for i=1:1:length(excluded)
 end    
 
 % Find all the .txt files in 'fileList'
-% boo = strfind(fileList,'txt');
+% it is possible to use CSVs
+% boo = strfind(fileList,'csv');
 boo = strfind(fileList,'txt');
 
 %cellfun Apply function to each cell in cell array
@@ -81,7 +82,7 @@ for i = 1:1:length(TrackMate_fileList)
     % recognize XLS, XLSX, XLSM, XLTX, and XLTM.
     %[num,txt,raw] = xlsread(TrackMate);
     
-    %We want to make this work for txt files so that we donèt need to rely
+    %We want to make this work for txt files so that we donÃ¨t need to rely
     %on xlsread, which only works if we have excel
     
     M = readtable(TrackMate);
