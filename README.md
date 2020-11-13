@@ -125,7 +125,12 @@ which should open in your default web browser.
 <a name="trainable"></a>
 ## 4 The trainable option
 - Step-to-step walkthrough can be found here: [here](/notebooks/trainable.ipynb).
-- REDA: pls see the notebook above. There is one or two steps that need you to help me fill out.
+- Step 3 :
+1. Open Fiji, drag and drop verify_true_pairs.ijm then run it.
+2. First window will ask you for the “cropped tiffs” directory generated in module 4 (according to the example, it would be in the “Controls” folder) and the original movies directory (according to the example, it would be the “Controls” folder).
+3. cropped tiff will open one by one and a window will ask if it "Is it a true pair", click yes or no accordingly.
+4. When done with all cropped tiffs, a True.csv file should be find in each movie folder.
+
 
 
 _________________
