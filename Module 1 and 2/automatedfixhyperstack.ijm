@@ -1,5 +1,4 @@
-#@ File (label = "Original movies directory", style = "directory") input
-#@ File (label = "Registered movies directory", style = "directory") output
+#@ File (label = "Original Movies directory", style = "directory") input
 #@ String (label = "File suffix", value = ".tif") suffix
 
 
@@ -15,13 +14,13 @@ function processFolder(input) {
 		if(File.isDirectory(input + File.separator + list[i]))
 			processFolder(input + File.separator + list[i]);
 		if(endsWith(list[i], suffix))
-			processFile(input, output, list[i]);
+			processFile(input, list[i]);
 			row++;	
 	}
 }
 
 
-function processFile(input, output, file) {
+function processFile(input, file) {
 		discardReg=substring(file, 0, 2);
 	    if(discardReg!="r_"){
 	    print("Processing: " + file);
