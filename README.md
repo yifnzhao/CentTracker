@@ -59,8 +59,6 @@ TODO:REDA (if there is installation/requirments for matlab scripts that you use.
 Detailed instructions can be found [here](https://imagej.net/Fiji). The version used for our experiments is 1.52v.
 
 
-
-
 <a name="usage"></a>
 ## 3 Usage
 
@@ -99,7 +97,8 @@ which should open in your default web browser.
 
 <a name="trainable"></a>
 ## 4 The trainable option
-- TODO: REDA, YIFAN
+- Step-to-step walkthrough can be found here: [here](/notebooks/trainable.ipynb).
+- REDA: pls see the notebook above. There is one or two steps that need you to help me fill out.
 
 
 _________________
