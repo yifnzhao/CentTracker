@@ -104,7 +104,13 @@ which should open in your default web browser.
 <a name="tracking"></a>
 ### Module 2: Tracking
 - TrackMate is our recommended software. Detailed installation and usage instructions can be found [here](https://imagej.net/TrackMate).
-- TODO: REDA (maybe you can describe the trackmate parameters that you used a little bit?)
+1. Open Fiji, drag and drop automatedfixhyperstack.ijm then run it.
+2. First window will ask you for the original movies directory (according to the example, it would be the “Controls” folder. At this stage each movie subfolder should contain the original movie, the registered movie starting with “r_” and a subfolder “roi”.
+3. First original movie will open in the background to extract dimensions then registered movie will open with correct dimensions.
+4. A window will then ask you to draw a rectangle around the border of your movie reducing the best possible the surrounding extra borders resulting from registration then click on Done.
+5. A window asking to "generate a .xml using Trackmate" will prompt (do not click on done until step 5 completion) and Trackmate window will open, then click on next. Select LoG detector then click on next. Choose the channel of centrosomes. We used 2.5 microns for GSCs centrosomes estimated blob diameter and lowered the threshold until all centrosomes were detected (important step ! use button preview to ensure that all centrosomes were detected), it does no matter if some spurious spots were also detected. Click on next 6 times until linking max distance is asked. We used for GSCs centrosomes 2.7  microns for linking max distance, gap closing max distance and we used 2 for Gap-closing max frame gap. Click next 2 times until the display options window appear and then click on save and save the Trackmate output ( a .xml file) in same folder as your registered movie and ensure that that file is labeled the same as the registered movie.
+5. Click on done when done generating the xml.
+
 
 <a name="tpc"></a>
 ### Module 3: Track pair classification
