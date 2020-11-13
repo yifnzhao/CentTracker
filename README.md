@@ -120,7 +120,14 @@ which should open in your default web browser.
 
 <a name="scoring"></a>
 ### Module 4: Cell scoring
-- TODO: REDA
+1.  Open Matlab and run Step1_import_textfile_and_align_cent_tracks.m that will import the tracking output to Matlab. A window will ask you to select the folder containing your movies ( according to the example, it would be the “Controls” folder) and the script will generate 2 additional txt files per movie with the coordinates of the spindle midpoint that will be use as an input for fiji macro Step2_CropCells_.ijm.
+2. Open fiji, run Step2_CropCells_.ijm, a window will ask you to select the folder containing your movies ( according to the example, it would be the “Controls” folder) when script is done, return to Matlab.
+3. Run Step3_score_mitosis.m. This script will then plot each cell spindle length versus time. It will allows you to score NEBD and the start and end of congression by clicking on the graph of spindle length versus time for each cell by positioning the cross hairs and click to select the nearest x-coordinate (i.e. frame) for NEBD, congression start (CongS) and congression end (CongE), in that order. If an event occurs before or after the end of the timelapse (e.g. before frame 1 or after frame 80), click to the left or right of the graph (outside of its borders), respectively.
+4. If the graph is unclear, click any keyboard button to open a cropped, max projection of the cell in question (this step will allow you to verify if the centrosomes pair used for this graph is a true pair); You will be prompted to enter a frame for NEBD, CongS and CongE and these values will then be displayed on the graph to guide your selection using the cross hairs. 'If you make a mistake, take note of the cell and continue scoring.
+5. When done scoring, run Step4_calc_fits.m in Matlab. This script will process the scoring and calculate the duration of congression for cells for which both the start and end of congression occurred during the image acquisition using lines of best fit, if for a cell the fitting fails or the fitting values differ of more than 2 frames from the scored values, the concerned plot will be opened again to ask to choose between scored values and fitting values.
+The generated variables “GermlineOutput” and “CellOutput” contains various mitotic parameters.
+6. if you want to correct or verify your scoring, run Check_fit_and_scoring.m which will plot each spindle length versus time (frames) for each cell, lines corresponding to the scored events and fitted curves obtained by Step4_calc_fits.m. Use a mouse click to pass to the next graph or click any button in your keyboard to open a cropped, max projection of the cell in question (this step will allow you to verify if the centrosomes pair used for this graph is a true pair); You will be prompted to enter a frame for NEBD, CongS and CongE and these values will then be displayed on the graph to guide your selection using the cross hairs. You can then rescore (point 3).
+	
 
 <a name="trainable"></a>
 ## 4 The trainable option
