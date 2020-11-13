@@ -52,8 +52,8 @@ After you have ```cd```'d to the CentTracker foler, simply enter
 ```pip install -r requirements.txt``` in the terminal
 
 
-### Install MATLAB packages
-TODO:REDA (if there is installation/requirments for matlab scripts that you use.)
+### Install MATLAB 2020b
+https://www.mathworks.com/products/matlab.html
 
 ### Install Fiji
 Detailed instructions can be found [here](https://imagej.net/Fiji). The version used for our experiments is 1.52v.
@@ -69,11 +69,13 @@ Pre-requisite:
 Group your original movies that are under the same conditions in the same folder and assign each of them a folder labeled with their name without extension.
 Example :
 Your main folder : Controls
-                      Subfolders : 
+                      Subfolder : 
                          2018-01-16_GSC_L4_L4440_RNAi_1
 		                            File : 2018-01-16_GSC_L4_L4440_RNAi_1.tif
+		      Subfolder : 
                          2018-01-16_GSC_L4_L4440_RNAi_2
 		                            File : 2018-01-16_GSC_L4_L4440_RNAi_2.tif
+		      Subfolder : 
                          2018-01-16_GSC_L4_L4440_RNAi_2
 	                            	File : 2018-01-16_GSC_L4_L4440_RNAi_1.tif	
 
