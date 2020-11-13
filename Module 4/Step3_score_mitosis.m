@@ -7,7 +7,7 @@
 
 % Before running this script use the CropCells macro in ImageJ to crop out
 % each tracked cell. 
-quest = {'Before running this script use the CropCells macro in ImageJ to crop out each tracked cell.';
+quest = {'Before running this script use the Step2_CropCells.ijm macro in ImageJ to crop out each tracked cell.';
     'This script allows you to score NEBD and the start and end of congression by clicking on a graph of spindle length versus time for each cell.';
     'Position the cross hairs and click to select the nearest x-coordinate (i.e. frame) for NEBD, congression start (CongS) and congression end (CongE), in that order.';
     'If an event occurs before or after the end of the timelapse (e.g. before frame 1 or after frame 80), click to the left or right of the graph, respectively.';
