@@ -1,6 +1,6 @@
 
 #@ File (label = "cropped tiffs", style = "directory") input
-#@ File (label = "movie folder", style = "directory") output
+#@ File (label = "Original movies directory", style = "directory") output
 #@ String (label = "File suffix", value = ".tif") suffix
 
 processFolder(input);
