@@ -65,9 +65,28 @@ Detailed instructions can be found [here](https://imagej.net/Fiji). The version 
 <a name="registration"></a>
 ### Module 1: Registration
 #### 1. Create a x-y translation matrix.
-- Detailed instructions for single movie: [relative path to be added].
-- Detailed instructions for batch mode: [relative path to be added].
-- TODO: REDA
+Pre-requisite:
+Group your original movies that are under the same conditions in the same folder and assign each of them a folder labeled with their name without extension.
+Example :
+Your main folder : Controls
+                      Subfolders : 
+                         2018-01-16_GSC_L4_L4440_RNAi_1
+		                            File : 2018-01-16_GSC_L4_L4440_RNAi_1.tif
+                         2018-01-16_GSC_L4_L4440_RNAi_2
+		                            File : 2018-01-16_GSC_L4_L4440_RNAi_2.tif
+                         2018-01-16_GSC_L4_L4440_RNAi_2
+	                            	File : 2018-01-16_GSC_L4_L4440_RNAi_1.tif	
+
+1. Open Fiji, drag and drop automatedregistrationtool.ijm then run it.
+2. First window will ask you for the original movies directory ( according to the example, it would be the “Controls” folder.
+3. First movie in your folder will open and channels will be splitted if your movie has more than 1 channel, a window will then ask you to select the centrosomes channel.
+4. A max z-projection of your movie will then be generated, ROI Manager will open and a window prompting “click when done tracking”, do not click on done until step 7 is done.
+5. Look for a pair of prominently congressing centrosomes. You might need to watch the movie a few times to identify such a pair. But it gets very easy with a little practice.
+6. At t = 0, draw a straight line in the middle of the two centrosomes that you identified in the previous step. This line should approximate the metaphase plate (see Figure 1). Then, enter "t" on your keyboard (shortcut for "Add" in ROI manager).
+7. Go to the next time point. If the metaphase plate position changes, move your line accordingly using "->" or "<-" on your keyboard. Enter "t" to add the line. Repeat this step until the last time point is reached or the metaphase plate for this cell cannot be tracked accurately anymore then click on done.
+8. A window will ask you if you need to "track an additional cell ?", click Yes if the metaphase plate tracking did not reach the last time point. Repeat then step 5 to 7 but starting at the last time point tracked and looking for a new pair of centrosomes. Repeat this step as long as you did not reach the last time point, there is no limit of additional cells then click on No for "track an additional cell ?".
+![Figure 1](https://github.com/yifnzhao/Semi-automated-GSC-registration/blob/master/figures/Figure%202.png)
+
 
 #### 2. Register
 - To open a jupyter notebook, simply enter the following in the terminal
