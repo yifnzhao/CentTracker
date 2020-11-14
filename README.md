@@ -15,7 +15,7 @@ This repository includes detailed instructions for installation, requirements, d
   - [Module 1: Registration](#registration)
   - [Module 2: Tracking](#tracking)
   - [Module 3: Track pair classificatino](#tpc)
-  - [Module 4: Cell soring](#scoring)
+  - [Module 4: Cell scoring](#scoring)
 4. [The trainable option](#trainable)
 
 
@@ -68,16 +68,15 @@ Detailed instructions can be found [here](https://imagej.net/Fiji). The version 
 Pre-requisite:
 Group your original movies that are under the same conditions in the same folder and assign each of them a folder labeled with their name without extension.
 Example :
-Your main folder : Controls
-                      Subfolder : 
-                         2018-01-16_GSC_L4_L4440_RNAi_1
-		                            File : 2018-01-16_GSC_L4_L4440_RNAi_1.tif
-		      Subfolder : 
-                         2018-01-16_GSC_L4_L4440_RNAi_2
-		                            File : 2018-01-16_GSC_L4_L4440_RNAi_2.tif
-		      Subfolder : 
-                         2018-01-16_GSC_L4_L4440_RNAi_2
-	                            	File : 2018-01-16_GSC_L4_L4440_RNAi_1.tif	
+```
+Controls/
+├── 2018-01-16_GSC_L4_L4440_RNAi_1
+│   └── 2018-01-16_GSC_L4_L4440_RNAi_1.tif
+├── 2018-01-16_GSC_L4_L4440_RNAi_2
+│   └── 2018-01-16_GSC_L4_L4440_RNAi_2.tif
+└── 2018-01-16_GSC_L4_L4440_RNAi_3
+    └── 2018-01-16_GSC_L4_L4440_RNAi_3.tif
+```
 
 1. Open Fiji, drag and drop automatedregistrationtool.ijm then run it.
 2. First window will ask you for the original movies directory ( according to the example, it would be the “Controls” folder.
