@@ -131,7 +131,7 @@ The generated variables “GermlineOutput” and “CellOutput” contains vario
 <a name="trainable"></a>
 ## 4 The trainable option
 - These steps should be done using a folder organised as explained in the module 1 but containing only the subset of movies you desire to use for training a model
-- A step-to-step walkthrough can be found here: [here](/notebooks/trainable.ipynb).
+- A step-to-step walkthrough can be found [here](/notebooks/trainable.ipynb).
 - About step 3 :
 1. Open Fiji, drag and drop verify_true_pairs.ijm then run it.
 2. First window will ask you for the “cropped tiffs” directory generated in module 4 and the original movies directory that will be used for training.
