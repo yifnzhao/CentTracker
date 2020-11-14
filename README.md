@@ -131,18 +131,11 @@ The generated variables “GermlineOutput” and “CellOutput” contains vario
 <a name="trainable"></a>
 ## 4 The trainable option
 - These steps should be done using a folder organised as explained in the module 1 but containing only the subset of movies you desire to use for training a model
-- Step-to-step walkthrough can be found here: [here](/notebooks/trainable.ipynb).
-- Step 3 :
+- A step-to-step walkthrough can be found here: [here](/notebooks/trainable.ipynb).
+- About step 3 :
 1. Open Fiji, drag and drop verify_true_pairs.ijm then run it.
 2. First window will ask you for the “cropped tiffs” directory generated in module 4 and the original movies directory that will be used for training.
 3. cropped tiff will open one by one and a window will ask if it "Is it a true pair", click yes or no accordingly.
 4. When done with all cropped tiffs, a True.csv file should be find in each movie folder.
 
 
-
-_________________
-[OLD STUFF]
-- Module 1 and 2: For step-to-step movie registration instructions, read the doc [here](https://github.com/yifnzhao/CENTRACKER/blob/master/how-to-register.md).
-- Example usage for movie registration and track pairing can be found [here](https://github.com/yifnzhao/CENTRACKER/blob/master/src/register%20and%20pair.ipynb).
-- Module 3: Example usage for classifier dataset preparation and training can be found [here](https://github.com/yifnzhao/CENTRACKER/blob/master/src/Dataset%20preparation%20and%20classifier%20training.ipynb).
-- Module 4
