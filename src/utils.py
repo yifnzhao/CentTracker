@@ -503,6 +503,11 @@ class TrackPairer(object):
     
         - The mindist arguent is a distance threshold of the minimum proximity two centrosomes must have for at least 1 time frame in order to be considered as "paired"
         """
+        print("Input parameters: ")
+        print("maxdist (um): ",maxdist)
+        print("mindist (um) : ",mindist)
+        print("maxcongdist (um) : ",maxcongdist)
+        print("minoverlap (s) ",minoverlap)
         # store the provided variables
         self.xml_path = xml
         self.min_overlap = minoverlap
@@ -539,6 +544,7 @@ class TrackPairer(object):
             self.top, self.bottom, self.left, self.right = findCroppedDim(tiff_path = originalMovie)
         # read from xml all info about tracks
         track_general, track_detail = parseTracks(self.xml_path)
+                
         # populate edge objects
         for index, row in track_detail.iterrows():
             myEdge = edge()
@@ -557,7 +563,7 @@ class TrackPairer(object):
             myTrack.x = float(row['TRACK_X_LOCATION'])
             myTrack.y = float(row['TRACK_Y_LOCATION'])
             myTrack.z = float(row['TRACK_Z_LOCATION'])
-            myTrack.t_i = float(row['TRACK_START'])
+            myTrack.t_i = float(row['TRACK_START']) 
             myTrack.t_f = float(row['TRACK_STOP'])
             myTrack.duration = float(row['TRACK_DURATION'])
             myTrack.diameter, myTrack.contrast, myTrack.intensity = self.findTrackInfo(myTrack)
@@ -681,7 +687,7 @@ class TrackPairer(object):
             toRight = self.right - x
             myCell.dist2border = min([toTop, toBottom, toLeft, toRight])
 
-    def findNeighbors(self, f, originalMovie):
+    def findNeighbors(self, f, originalMovie, framerate):
         # 1. spots bookkeeping
         self.allSpots = self.getAllSpots()
         # 2. tracks and edges bookkeeping
@@ -697,7 +703,7 @@ class TrackPairer(object):
                 elif myTrack.id == nbr.id:
                     continue
                 # 3) find period of overlap: if fewer frames than min_overlap , out
-                t_start = max([myTrack.t_i, nbr.t_i])
+                t_start = max([myTrack.t_i, nbr.t_i]) 
                 t_stop = min([myTrack.t_f, nbr.t_f])
                 if t_stop - t_start < self.min_overlap:
                     f.write(str(int(myTrack.id)) + ' and ' + str(int(nbr.id)) + ' not pair: overlap time too short\n')
@@ -735,7 +741,7 @@ class TrackPairer(object):
                 stdev_z_n = stdev(normals['z'])
                 myCell.center_stdev = (stdev_x**2 + stdev_y**2 + stdev_z**2)**0.5
                 myCell.normal_stdev = (stdev_x_n**2 + stdev_y_n**2 + stdev_z_n**2)**0.5
-                myCell.t_cong = findCong(time, dist, self.maxcongdist)
+                myCell.t_cong = findCong(time, dist, self.maxcongdist) * framerate
                 myCell.contrast = (myTrack.contrast + nbr.contrast)/2
                 myCell.intensity = (myTrack.intensity + nbr.intensity)/2
                 myCell.diameter = (myTrack.diameter + nbr.diameter)/2
@@ -875,20 +881,20 @@ def cell2df(cells):
 
 def pair(clf,r_xml_path,originalMovie,out_folder,csv_path,maxdist=11,mindist=4,maxcongdist=4,minoverlap=10,dim=None):
     f = open(out_folder+'/console.txt', 'w')
-    print('Pairing tracks in the movie: ' + originalMovie)
+    print('Original movie: ' + originalMovie)
     # crude pairer, generate features
     if dim == None:
         myPairer = TrackPairer(r_xml_path,maxdist=maxdist,mindist=mindist,maxcongdist=maxcongdist,minoverlap=minoverlap)
     else: 
         myPairer = TrackPairer(r_xml_path,DIM = dim,maxdist=maxdist,mindist=mindist,maxcongdist=maxcongdist,minoverlap=minoverlap)
         myPairer.left, myPairer.right, myPairer.top, myPairer.bottom = dim 
-    
-    cells = myPairer.findNeighbors(f, originalMovie)
+    framerate = getFramerate(r_xml_path)
+    cells = myPairer.findNeighbors(f, originalMovie,framerate)
     df = cell2df(cells)
-    df.to_csv (out_folder+'/features.csv', index = False, header=True)
+    df.to_csv(out_folder+'/features.csv', index = False, header=True)
     print("Potential pairs generated.")
     # generate features panel for ml clf
-    X_df = pd.read_csv(out_folder+'/features.csv', usecols = range(11))
+    X_df = pd.read_csv(out_folder+'/features.csv', usecols = range(11))    
     X = X_df.to_numpy()
     # predict
     y_pred = clf.predict(X)
@@ -984,6 +990,10 @@ def getAllTracks(xml_path,allSpots):
         else:
             allEdges[myEdge.track_id] = {myEdge.t: myEdge.source}        
     # populate the track objects
+#     track_general['TRACK_DURATION'] =  track_general['TRACK_DURATION']/60
+#     track_general['TRACK_START'] =  track_general['TRACK_START']/60
+#     track_general['TRACK_STOP'] =  track_general['TRACK_STOP']/60
+    
     for index, row in track_general.iterrows():
         myTrack = track()
         myTrack.id = int(row['TRACK_ID'])
@@ -1058,3 +1068,15 @@ def linkID(trackIDList, allTracks,allEdges):
             spot2track[spotID] = trackID
     return track2spot, spot2track
 
+
+def getFramerate(xml):
+    with open(xml, 'r') as f:
+        lines = f.readlines()
+        for l in lines:
+            if l.startswith("  T ="):
+                import re
+                framerate = float(re.findall(r'\d+', l)[2] + '.' + re.findall(r'\d+', l)[3])
+                print("framerate (per sec): ", framerate)
+                return framerate
+        framerate = input("framerate not found in xml.. Please input manually: ")
+        return framerate
