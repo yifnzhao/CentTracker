@@ -21,7 +21,7 @@ This repository includes detailed instructions for installation, requirements, d
 
 <a name="overview"></a>
 ## 1 Pipeline overview
-- TODO: add the model figure and caption from manuscript (REDA or YIFAN)
+![Figure 1](https://github.com/yifnzhao/CentTracker/blob/master/figures/overview.png)
 
 <a name="installation"></a>
 ## 2 Installation
@@ -91,7 +91,7 @@ Controls/
 6. At t = 0, draw a straight line in the middle of the two centrosomes that you identified in the previous step. This line should approximate the metaphase plate (see Figure 1). Then, enter "t" on your keyboard (shortcut for "Add" in ROI manager).
 7. Go to the next time point. If the metaphase plate position changes, move your line accordingly using "->" or "<-" on your keyboard. Enter "t" to add the line. Repeat this step until the last time point is reached or the metaphase plate for this cell cannot be tracked accurately anymore then click on done.
 8. A window will ask you if you need to "track an additional cell ?", click Yes if the metaphase plate tracking did not reach the last time point. Repeat then step 5 to 7 but starting at the last time point tracked and looking for a new pair of centrosomes. Repeat this step as long as you did not reach the last time point, there is no limit of additional cells then click on No for "track an additional cell ?".
-![Figure 1](https://github.com/yifnzhao/Semi-automated-GSC-registration/blob/master/figures/Figure%202.png)
+![Figure 2](https://github.com/yifnzhao/CentTracker/blob/master/figures/registration.png)
 
 
 #### 2. Register
@@ -131,7 +131,7 @@ which should open in your default web browser.
 5. When done scoring, run Step4_calc_fits.m in Matlab. This script will process the scoring and calculate the duration of congression for cells for which both the start and end of congression occurred during the image acquisition using lines of best fit, if for a cell the fitting fails or the fitting values differ of more than 2 frames from the scored values, the concerned plot will be opened again to ask to choose between scored values and fitting values.
 The generated variables “GermlineOutput” and “CellOutput” contains various mitotic parameters.
 6. if you want to correct or verify your scoring, run Check_fit_and_scoring.m which will plot each spindle length versus time (frames) for each cell, lines corresponding to the scored events and fitted curves obtained by Step4_calc_fits.m. Use a mouse click to pass to the next graph or click any button in your keyboard to open a cropped, max projection of the cell in question (this step will allow you to verify if the centrosomes pair used for this graph is a true pair); You will be prompted to enter a frame for NEBD, CongS and CongE and these values will then be displayed on the graph to guide your selection using the cross hairs. You can then rescore (point 3).
-	
+
 
 <a name="trainable"></a>
 ## 4 The trainable option
@@ -142,5 +142,3 @@ The generated variables “GermlineOutput” and “CellOutput” contains vario
 2. First window will ask you for the “cropped tiffs” directory generated in module 4 and the original movies directory that will be used for training.
 3. cropped tiff will open one by one and a window will ask if it "Is it a true pair", click yes or no accordingly.
 4. When done with all cropped tiffs, a True.csv file should be find in each movie folder.
-
-
