@@ -50,7 +50,7 @@ $ jupyter notebook
 ```
 
 
-### Clone this repository, either by GitHub desktop, direct download, or by entering the following in the terminal
+### Clone this repository, either by GitHub desktop or direct download (followed by unzipping). Then install the required packages by:
 ```
 $ cd CentTracker-master
 $ pip install -r requirements.txt
