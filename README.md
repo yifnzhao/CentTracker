@@ -25,13 +25,6 @@ This repository includes detailed instructions for installation, requirements, d
 
 <a name="installation"></a>
 ## 2 Installation
-### Clone this repository, either by GitHub desktop, direct download, or by entering the following in the terminal
-```
-$ wget https://github.com/yifnzhao/CentTracker/archive/master.zip
-$ unzip master.zip
-$ rm master.zip
-$ cd CentTracker-master
-```
 
 ### Install Conda
 1. Install conda. Detailed installation instructions can be found [here](https://docs.conda.io/projects/conda/en/latest/user-guide/install/). Now, check if conda is installed and in your PATH by
@@ -46,11 +39,23 @@ conda 4.9.0
 $ conda create -n "mitosis" python=3.8.5
 $ conda activate mitosis
 ```
+Please see [here](https://docs.python.org/3/tutorial/venv.html) for why we need virtual environment.
 
-### Install python packages
-After you have ```cd```'d to the CentTracker foler, simply enter
-```pip install -r requirements.txt``` in the terminal
+Note that everytime you need to use CentTracker, you will need to enter ```conda activate mitosis``` in the terminal.
+Example
+```
+$ conda activate mitosis
+$ cd CentTracker-master
+$ jupyter notebook
+```
 
+
+### Clone this repository, either by GitHub desktop, direct download, or by entering the following in the terminal
+```
+$ cd CentTracker-master
+$ pip install -r requirements.txt
+$ conda install scikit-image==0.15.0
+```
 
 ### Install MATLAB 2020b
 https://www.mathworks.com/products/matlab.html
