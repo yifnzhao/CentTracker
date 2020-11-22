@@ -1080,3 +1080,28 @@ def getFramerate(xml):
                 return framerate
         framerate = input("framerate not found in xml.. Please input manually: ")
         return framerate
+    
+    
+def spots2coords(out_csv,out_coords,out_cellid):
+    spots = pd.read_csv(out_csv)
+    cent_dict = {}
+    for index, row in spots.iterrows():
+        cell_id = row['Label'][:-1]
+        side = row['Label'][-1]
+        if cell_id not in cent_dict:
+            cent_dict[cell_id] = {'a':{},'b':{}}
+        frame = row['FRAME']
+        cent_dict[cell_id][side][frame] = (row['POSITION_X'],row['POSITION_Y'],row['POSITION_Z'])
+    df_list = []
+    for cell_id, mydict in cent_dict.items():
+        id = 'Cell_'+cell_id.split("_")[1]
+        frames = set(mydict['a'].keys()).intersection(mydict['b'].keys())
+        for f in frames:
+            x,y,z = [(mydict['a'][f][0] + mydict['b'][f][0])/2,
+                   (mydict['a'][f][1] + mydict['b'][f][1])/2,
+                   (mydict['a'][f][2] + mydict['b'][f][2])/2 ]
+            df_list.append([id, f,x,y,z])
+    df = pd.DataFrame(df_list)
+    df.columns = ['Cell','Frame','X','Y','Z']
+    df.to_csv(out_coords,sep='\t',index=None)
+    pd.DataFrame(df['Cell'].unique()).to_csv(out_cellid,index=None,header=None)
