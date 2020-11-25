@@ -1083,7 +1083,11 @@ def getFramerate(xml):
     
     
 def spots2coords(out_csv,out_coords,out_cellid):
-    spots = pd.read_csv(out_csv)
+    try:
+        spots = pd.read_csv(out_csv)
+    except FileNotFoundError:
+        print("Spots csv not found.")
+        return
     cent_dict = {}
     for index, row in spots.iterrows():
         cell_id = row['Label'][:-1]
