@@ -50,7 +50,9 @@ function processFile(input, file) {
 			saveAs("Results", csvdir+File.separator+b+".csv");
 			run("Close");
 			roiManager("Delete");
+			roiManager("Delete");
 			}
+		roiManager("Delete");
 		run("Close All");
 		run("Collect Garbage");
 }
