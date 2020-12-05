@@ -32,7 +32,8 @@ function processFile(input, file) {
 	    waitForUser("click on centrosomes channel then click on OK");
 		run("Z Project...", "projection=[Max Intensity] all");
 		//run("Brightness/Contrast...");
-		run("Enhance Contrast", "saturated=0.35");	
+		run("Enhance Contrast", "saturated=0.35");
+	
 		run("ROI Manager...");
 		setTool("line");
 		b=1;
@@ -52,6 +53,7 @@ function processFile(input, file) {
 			roiManager("Delete");
 			roiManager("Delete");
 			}
+		roiManager("Delete");
 		run("Close All");
 		run("Collect Garbage");
 }
