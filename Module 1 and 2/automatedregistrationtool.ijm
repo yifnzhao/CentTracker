@@ -53,7 +53,8 @@ function processFile(input, file) {
 			roiManager("Delete");
 			roiManager("Delete");
 			}
-		roiManager("Delete");
+		selectWindow("ROI Manager");
+     		run("Close");
 		run("Close All");
 		run("Collect Garbage");
 }
