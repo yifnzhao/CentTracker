@@ -52,7 +52,7 @@ $ conda activate mitosis
 ```
 $ cd CentTracker-master
 $ pip install -r requirements.txt
-$ conda install scikit-image==0.15.0
+$ conda install scikit-image==0.17.2
 ```
 
 ### Install MATLAB 2020b
