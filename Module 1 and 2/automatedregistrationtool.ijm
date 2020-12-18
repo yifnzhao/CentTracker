@@ -42,7 +42,7 @@ function processFile(input, file) {
 		roiManager("List");
 		saveAs("Results", csvdir+File.separator+b+".csv");
 		run("Close");
-		roiManager("Delete");
+		roiManager("Reset");;
 		while(a==1){
 			b=b+1;
 			waitForUser("click when done tracking");	
@@ -50,8 +50,7 @@ function processFile(input, file) {
 			roiManager("List");
 			saveAs("Results", csvdir+File.separator+b+".csv");
 			run("Close");
-			roiManager("Delete");
-			roiManager("Delete");
+			roiManager("Reset");
 			}
 		selectWindow("ROI Manager");
      		run("Close");
