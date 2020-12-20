@@ -32,7 +32,8 @@ function processFile(input, file) {
 	    waitForUser("click on centrosomes channel then click on OK");
 		run("Z Project...", "projection=[Max Intensity] all");
 		//run("Brightness/Contrast...");
-		run("Enhance Contrast", "saturated=0.35");	
+		run("Enhance Contrast", "saturated=0.35");
+	
 		run("ROI Manager...");
 		setTool("line");
 		b=1;
@@ -41,7 +42,7 @@ function processFile(input, file) {
 		roiManager("List");
 		saveAs("Results", csvdir+File.separator+b+".csv");
 		run("Close");
-		roiManager("Delete");
+		roiManager("Reset");;
 		while(a==1){
 			b=b+1;
 			waitForUser("click when done tracking");	
@@ -49,8 +50,10 @@ function processFile(input, file) {
 			roiManager("List");
 			saveAs("Results", csvdir+File.separator+b+".csv");
 			run("Close");
-			roiManager("Delete");
+			roiManager("Reset");
 			}
+		selectWindow("ROI Manager");
+     		run("Close");
 		run("Close All");
 		run("Collect Garbage");
 }
