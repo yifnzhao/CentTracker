@@ -364,24 +364,24 @@ def translate(im_in,translation,hi_res=True,compression=1,padzeros = True):
             x_dim_adj, y_dim_adj = x_high-x_low, y_high-y_low
             #create empty tiff
         if n_channel == 1:
-                im_out = np.zeros((n_frame, n_zstep, y_dim_adj, x_dim_adj))
+            im_out = np.zeros((n_frame, n_zstep, y_dim_adj, x_dim_adj))
         else:
             im_out = np.zeros((n_frame, n_zstep, n_channel, y_dim_adj, x_dim_adj))
-            # translate
-            for t in range(n_frame):
-                print("Start processing t = " + str(t))
-                trans_x, trans_y = translation[t]
-                for z in range(n_zstep):
-                    if n_channel==1:
+        # translate
+        for t in range(n_frame):
+            print("Start processing t = " + str(t))
+            trans_x, trans_y = translation[t]
+            for z in range(n_zstep):
+                if n_channel==1:
+                    for y in range(y_dim):
+                        for x in range(x_dim):
+                            im_out[t][z][y-trans_y-y_low][x-trans_x-x_low] = int(im_in[t][z][y][x])
+                else:
+                    for ch in range(n_channel):
                         for y in range(y_dim):
                             for x in range(x_dim):
-                                im_out[t][z][y-trans_y-y_low][x-trans_x-x_low] = int(im_in[t][z][y][x])
-                    else:
-                        for ch in range(n_channel):
-                            for y in range(y_dim):
-                                for x in range(x_dim):
-                                    im_out[t][z][ch][y-trans_y-y_low][x-trans_x-x_low] = int(im_in[t][z][ch][y][x])
-    
+                                im_out[t][z][ch][y-trans_y-y_low][x-trans_x-x_low] = int(im_in[t][z][ch][y][x])
+
     return im_out
 
 def register(tiff_path, trans_mat, out_tiff_path, highres = True, compress = 1, pad = True):
