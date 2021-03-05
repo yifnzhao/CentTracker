@@ -26,6 +26,8 @@ function processFile(input, file) {
 	    print("Processing: " + file);
 	    open(input + File.separator + file);
 		getVoxelSize(xy, Pxheight, z, unit);
+		t=lengthOf(unit);
+		unit=substring(unit, 0, t-1);
 		Stack.getDimensions(wi, he, ch, sl, fr);
 		Interval=Stack.getFrameInterval();
 		run("Close All");
