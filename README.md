@@ -1,7 +1,7 @@
 # CentTracker
 A trainable, machine learning-based tool for large-scale analyses of intravital imaging of *C. elegans* germline stem cell mitosis.
 
-The full description of CentTracker and its application on live imaging microscopy datasets are described in [_Molecular Biology of the Cell_ doi: 10.1091/mbc.e20-11-0716](https://www.molbiolcell.org/doi/10.1091/mbc.E20-11-0716).
+The full description of CentTracker and its application on live imaging microscopy datasets are available in [_Molecular Biology of the Cell_ doi: 10.1091/mbc.e20-11-0716](https://www.molbiolcell.org/doi/10.1091/mbc.E20-11-0716).
 
 This repository includes detailed instructions for installation, requirements, demos for single movie as well as batch processing.
 
