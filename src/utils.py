@@ -49,6 +49,8 @@ def findCong(time, dist, max_dist):
     all_periods.append(t_cong)
     return max(all_periods)
 
+def intersection(lst1, lst2):
+    return list(set(lst1) & set(lst2))
 ################################################
 # XML parsing related
 ################################################
@@ -635,19 +637,15 @@ class TrackPairer(object):
         stop = min([trackI.t_f, trackJ.t_f])
         if stop - start <= 0:
             return
-        t = start 
         
-        while t < stop :    
+        tp_trackI = self.allEdges[trackI.id].keys()
+        tp_trackJ = self.allEdges[trackJ.id].keys()
+        
+        intersect = intersection(tp_trackI,tp_trackJ)
+        
+        for t in intersect:
             # calculate distance
             # find ids of spots from i, j
-            if t not in self.allEdges[trackI.id]: 
-                # note: allEdges[trackI.id] is a dict, k is time, v is spot_id
-                t+=1
-                continue
-            if t not in self.allEdges[trackJ.id]:
-                t+=1
-                continue
-            # get spot id
             spot_i = self.allEdges[trackI.id][t]
             spot_j = self.allEdges[trackJ.id][t]
             # find spot loc by spot id
@@ -706,12 +704,16 @@ class TrackPairer(object):
                 t_start = max([myTrack.t_i, nbr.t_i]) 
                 t_stop = min([myTrack.t_f, nbr.t_f])
                 if t_stop - t_start < self.min_overlap:
-                    f.write(str(int(myTrack.id)) + ' and ' + str(int(nbr.id)) + ' not pair: overlap time too short\n')
+                    f.write(str(int(myTrack.id)) + ' and ' + str(int(nbr.id)) + ' not pair: overlap time too short {} (s) \n'.format(int(t_stop - t_start)))
                     continue
                 # 4) find max distance: if greater than max_dist um, out
                 dist, centers, normals, time = self.findDist(myTrack.id, nbr.id)
+                #################
+                if myTrack.id in [133] and nbr.id in [ 155] :
+                    print(dist)
+                #####################
                 if len(dist) < 2:
-                    f.write(str(int(myTrack.id)) + ' and ' + str(int(nbr.id)) + ' not pair: overlap time too short (<2) \n')
+                    f.write(str(int(myTrack.id)) + ' and ' + str(int(nbr.id)) + ' not pair: overlapping track time points (<2) \n')
                     continue
                 avg_dist = mean(dist)
                 max_dist = max(dist)
