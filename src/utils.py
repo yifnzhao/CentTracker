@@ -253,7 +253,6 @@ class TrackPairer(object):
             diam.append(spot.diam)
         if len(diam) <1:
             return 0,0,0
-        print(mean(diam), mean(contrast), mean(maxInt))
         return mean(diam), mean(contrast), mean(maxInt)
         
     
