@@ -274,7 +274,7 @@ class TrackPairer(object):
         start = max([trackI.t_i,trackJ.t_i])
         stop = min([trackI.t_f, trackJ.t_f])
         if stop - start <= 0:
-            return
+            return [-1], [-1], [-1], [-1]
         
         tp_trackI = self.allEdges[trackI.id].keys()
         tp_trackI=sorted([*tp_trackI])
@@ -394,14 +394,7 @@ class TrackPairer(object):
         spot2track = {}
         for trackID in trackIDList:
             track2spot[trackID] = []
-            track = self.allTracks[trackID]
-            start = track.t_i
-            stop = track.t_f            
-            t = start 
-            while t < stop :    
-                if t not in self.allEdges[trackID]: 
-                    t+=1
-                    continue
+            for t in self.allEdges[trackID].keys(): 
                 # get spot id
                 spotID = self.allEdges[trackID][t]
                 t+=1
@@ -441,21 +434,29 @@ class TrackPairer(object):
                 mySpots[spotID]=row
         counter = 0
         allSpots = []
+        debug=0
         for i, j in allPairs:
             counter+=1
+            print(counter)
             spots_i = track2spots[i]
             spots_j = track2spots[j]
             name_i ='Cent_'+str(counter)+'a'
             name_j ='Cent_'+str(counter)+'b'
+            print(name_j)
             for spotID in spots_i:
                 spotSeries = mySpots[spotID].copy()
                 spotSeries['Label'] = name_i
                 allSpots.append(spotSeries)
+                debug+=1
+                print(debug)
             for spotID in spots_j:
                 spotSeries = mySpots[spotID].copy()
                 spotSeries['Label'] = name_j
                 allSpots.append(spotSeries)
+                debug+=1
+                print(debug)
         df = pd.DataFrame(allSpots)
+        print(df.shape)
         # reorder
         df = df[["Label", "ID", "TRACK_ID",
                  "QUALITY", "POSITION_X","POSITION_Y", 
@@ -541,7 +542,7 @@ def pair(clf,r_xml_path,originalMovie,out_folder,csv_path,maxdist=11,mindist=4,m
     print("Predictions generated.")
     f.close()
     myPairer.pred2SpotCSV(r_xml_path,out_folder,csv_path)
-        
+    return myPairer
        
 def features2spots(features,r_xml_path,movie,output_csv_path):
     # pred to spots
@@ -666,16 +667,12 @@ def findTrackInfo(myTrack, allEdges, allSpots):
     maxInt = []
     diam = []
     contrast = []
-    while t <= myTrack.t_f:
-        if t not in allEdges[myTrack.id]: 
-            t+=1
-            continue
+    for t in allEdges[myTrack.id].keys(): 
         spotID = allEdges[myTrack.id][int(t)]
         spot = allSpots[spotID]
         maxInt.append(spot.maxInt)
         contrast.append(spot.contrast)
         diam.append(spot.diam)
-        t+=1
     if len(diam) <1:
         return 0,0,0
     return mean(diam), mean(contrast), mean(maxInt)
@@ -690,17 +687,9 @@ def linkID(trackIDList, allTracks,allEdges):
     spot2track = {}
     for trackID in trackIDList:
         track2spot[trackID] = []
-        track = allTracks[trackID]
-        start = track.t_i
-        stop = track.t_f            
-        t = start 
-        while t < stop :    
-            if t not in allEdges[trackID]: 
-                t+=1
-                continue
+        for t in allEdges[trackID].keys():
             # get spot id
             spotID = allEdges[trackID][t]
-            t+=1
             track2spot[trackID].append(spotID)
             spot2track[spotID] = trackID
     return track2spot, spot2track
