@@ -209,6 +209,7 @@ class TrackPairer(object):
             myTrack.t_i = float(row['TRACK_START']) 
             myTrack.t_f = float(row['TRACK_STOP'])
             myTrack.duration = float(row['TRACK_DURATION'])
+            
             myTrack.diameter, myTrack.contrast, myTrack.intensity = self.findTrackInfo(myTrack)
             # apply the border filter
             dist2border = self.track_dist2border(myTrack.x, myTrack.y)
@@ -222,6 +223,7 @@ class TrackPairer(object):
             # centrosome diameter filter
             self.allTracks[myTrack.id] = myTrack
         return self.allTracks
+    
     
     def getAllSpots(self):
         spots = parseSpots(self.xml_path)
@@ -239,23 +241,19 @@ class TrackPairer(object):
         return self.allSpots
     
     def findTrackInfo(self, myTrack):
-        # print(myTrack.id)
         t = myTrack.t_i
         maxInt = []
         diam = []
         contrast = []
-        while t <= myTrack.t_f:
-            if t not in self.allEdges[myTrack.id]: 
-                t+=1
-                continue
+        for t in self.allEdges[myTrack.id]:
             spotID = self.allEdges[myTrack.id][int(t)]
             spot = self.allSpots[spotID]
             maxInt.append(spot.maxInt)
             contrast.append(spot.contrast)
             diam.append(spot.diam)
-            t+=1
         if len(diam) <1:
             return 0,0,0
+        print(mean(diam), mean(contrast), mean(maxInt))
         return mean(diam), mean(contrast), mean(maxInt)
         
     
@@ -633,7 +631,6 @@ def getAllTracks(xml_path,allSpots):
 #     track_general['TRACK_DURATION'] =  track_general['TRACK_DURATION']/60
 #     track_general['TRACK_START'] =  track_general['TRACK_START']/60
 #     track_general['TRACK_STOP'] =  track_general['TRACK_STOP']/60
-    
     for index, row in track_general.iterrows():
         myTrack = track()
         myTrack.id = int(row['TRACK_ID'])
@@ -643,6 +640,7 @@ def getAllTracks(xml_path,allSpots):
         myTrack.t_i = float(row['TRACK_START'])
         myTrack.t_f = float(row['TRACK_STOP'])
         myTrack.duration = float(row['TRACK_DURATION'])
+        
         myTrack.diameter, myTrack.contrast, myTrack.intensity = findTrackInfo(myTrack, allEdges, allSpots)
         allTracks[myTrack.id] = myTrack
     return allTracks, allEdges
