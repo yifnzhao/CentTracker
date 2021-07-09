@@ -58,6 +58,7 @@ $ conda install scikit-image==0.17.2
 ### Install MATLAB 2020b
 https://www.mathworks.com/products/matlab.html
 
+The script tiffread2.m is required and can be found [here](https://www.mathworks.com/matlabcentral/fileexchange/10298-tiffread2-m). (add it it to the path or put it in the module 4 folder).
 Note: MATLAB is only required for analysis in module 4 (cell scoring), i.e., registration, tracking, track pair classification, and the trainable option can all be done with python and Fiji only. 
 
 ### Install Fiji
