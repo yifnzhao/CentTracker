@@ -104,8 +104,8 @@ $ jupyter notebook
 ```
 which should open in your default web browser.
 
-- For single movie, a jupyter notebook with detailed instructions can be found [here](/src/singlemovie.ipynb).
-- For batch mode, a jupyter notebook with detailed instructions can be found [here](/src/batchmode.ipynb).
+- For single movie, a jupyter notebook with detailed instructions can be found [here](/notebooks/singlemovie.ipynb).
+- For batch mode, a jupyter notebook with detailed instructions can be found [here](/notebooks/batchmode.ipynb).
 
 <a name="tracking"></a>
 ### Module 2: Tracking
