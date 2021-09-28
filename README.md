@@ -109,6 +109,7 @@ which should open in your default web browser.
 
 <a name="tracking"></a>
 ### Module 2: Tracking
+The current version of CentTraker works with TrackMate v6.0.0 
 - TrackMate (Tinevez et al, 2017) is our recommended software. Detailed installation and usage instructions can be found [here](https://imagej.net/TrackMate).
 1. Open Fiji, drag automatedfixhyperstack.ijm into the tool bar and then press "run".
 2. First window will ask you for the original movies directory (according to the example, it would be the “Controls” folder. At this stage each movie subfolder should contain the original movie, the registered movie starting with “r_” and a subfolder “roi”.
