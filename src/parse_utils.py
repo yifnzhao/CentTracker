@@ -106,18 +106,16 @@ def parseTracks(trackmate_xml_path):
     return df, df2
 
 def parseDim(trackmate_xml_path):
-    f=open(trackmate_xml_path)
-    ln=f.readline().split()
-    while ln[0] != 'Geometry:':
+    with open(trackmate_xml_path,'r') as f:
         ln=f.readline().split()
-    ln=f.readline().split()
-    X = int(ln[4][:-1])
-    ln=f.readline().split()
-    Y = int(ln[4][:-1])
-    ln=f.readline().split()
-    Z = int(ln[4][:-1])
-    ln=f.readline().split()
-    T = int(ln[4][:-1]) 
-    f.close()
+        while not ln[0].startswith('Geometry:'):
+            ln=f.readline().split()
+        ln=f.readline().split()
+        X = int(ln[4][:-1])
+        ln=f.readline().split()
+        Y = int(ln[4][:-1])
+        ln=f.readline().split()
+        Z = int(ln[4][:-1])
+        ln=f.readline().split()
+        T = int(ln[4][:-1]) 
     return (X,Y,Z,T)
-
